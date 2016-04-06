@@ -25,9 +25,9 @@ module CompareXML
       # when false, all text nodes are compared to their counterparts (except the empty ones)
       ignore_text_nodes: false,
 
-      # when true, trims and squeezes whitespace in text nodes and comments to a single space
+      # when true, trims and collapses whitespace in text nodes and comments to a single space
       # when false, all whitespace is preserved as it is without any changes
-      squeeze_whitespace: true,
+      collapse_whitespace: true,
 
       # when true, provides a list of all error messages encountered in comparisons
       # when false, execution stops when the first error is encountered with no error messages
@@ -123,7 +123,7 @@ module CompareXML
     def compareCommentNodes(n1, n2, opts, errors, status = EQUIVALENT)
       return true if opts[:ignore_comments]
       t1, t2 = n1.content, n2.content
-      t1, t2 = squeeze(t1), squeeze(t2) if opts[:squeeze_whitespace]
+      t1, t2 = collapse(t1), collapse(t2) if opts[:collapse_whitespace]
       unless t1 == t2
         status = UNEQUAL_COMMENTS
         errors << [nodePath(n1.parent), t1, status, t2, nodePath(n2.parent)] if opts[:verbose]
@@ -228,7 +228,7 @@ module CompareXML
     def compareTextNodes(n1, n2, opts, errors, status = EQUIVALENT)
       return true if opts[:ignore_text_nodes]
       t1, t2 = n1.content, n2.content
-      t1, t2 = squeeze(t1), squeeze(t2) if opts[:squeeze_whitespace]
+      t1, t2 = collapse(t1), collapse(t2) if opts[:collapse_whitespace]
       unless t1 == t2
         status = UNEQUAL_TEXT_CONTENTS
         errors << [nodePath(n1.parent), t1, status, t2, nodePath(n2.parent)] if opts[:verbose]
@@ -362,7 +362,7 @@ module CompareXML
     #
     def nodeExcluded?(n, opts)
       return true if n.is_a?(Nokogiri::XML::Comment) && opts[:ignore_comments]
-      return true if n.is_a?(Nokogiri::XML::Text) && (opts[:ignore_text_nodes] || squeeze(n.content).empty?)
+      return true if n.is_a?(Nokogiri::XML::Text) && (opts[:ignore_text_nodes] || collapse(n.content).empty?)
       opts[:ignore_nodes].each do |css|
         return true if n.xpath('../*').css(css).include?(n)
       end
@@ -435,14 +435,14 @@ module CompareXML
 
 
     ##
-    # Strips the whitespace (from beginning and end) and squeezes it,
-    # i.e. multiple spaces, new lines and tabs are all squeezed to a single space.
+    # Strips the whitespace (from beginning and end) and collapses it,
+    # i.e. multiple spaces, new lines and tabs are all collapsed to a single space.
     #
-    #   @param [String] text string to squeeze
+    #   @param [String] text string to collapse
     #
-    #   @return squeezed string
+    #   @return collapsed string
     #
-    def squeeze(text)
+    def collapse(text)
       text = text.to_s unless text.is_a? String
       text.strip.gsub(/\s+/, ' ')
     end

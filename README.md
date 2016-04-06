@@ -60,19 +60,33 @@ require 'compare-xml'
 ```
 
 
-## Options
+## Options at a Glance
 
 CompareXML has a variety of options that can be invoked as an optional argument, e.g.:
 
 ```ruby
-CompareXML.equivalent?(doc1, doc2, {squeeze_whitespace: true, verbose: true})
+CompareXML.equivalent?(doc1, doc2, {ignore_comments: false, verbose: true, ...})
 ```
 
+- `ignore_attr_order: {true|false}` default: **`true`**
+	- when `true`, ignores attribute order within tags
+- `ignore_attrs: {css}` default: **`{}`**
+	- When provided, ignores specific *attributes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
+- `ignore_comments: {true|false}` default: **`true`**
+	- when `true`, ignores comments, such as `<!-- comment -->`
+- `ignore_nodes: {css}` default: **`{}`**
+	- When provided, ignores specific *nodes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
+- `ignore_text_nodes: {true|false}` default: **`false`**
+	- when `true`, ignores all text content within a document
+- `collapse_whitespace: {true|false}` default: **`true`**
+	- when `true`, trims and collapses whitespace
+- `verbose: {true|false}` default: **`false`**
+	- when `true`, instead of a boolean, `CompareXML.equivalent?` returns an array of discrepancies.
 
-----------
 
+## Options in Depth
 
-- ####`ignore_attr_order: {true|false}` default: **`true`**
+- `ignore_attr_order: {true|false}` default: **`true`**
 
     When `true`, all attributes are sorted before comparison and only attributes of the same type are compared.
 
@@ -100,10 +114,8 @@ CompareXML.equivalent?(doc1, doc2, {squeeze_whitespace: true, verbose: true})
 		target="_blank" == target="_blank"
 
 
-----------
 
-
-- ####`ignore_attrs: {css}` default: **`{}`**
+- `ignore_attrs: {css}` default: **`{}`**
 
     When provided, ignores all **attributes** that satisfy a particular rule using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp).
 
@@ -120,10 +132,8 @@ CompareXML.equivalent?(doc1, doc2, {squeeze_whitespace: true, verbose: true})
 		<a href="https://google.com" class="primary button rounded">Link</a>
 
 
-----------
 
-
-- ####`ignore_comments: {true|false}` default: **`true`**
+- `ignore_comments: {true|false}` default: **`true`**
 
     When `true`, ignores comments, such as `<!-- This is a comment -->`.
 
@@ -140,10 +150,8 @@ CompareXML.equivalent?(doc1, doc2, {squeeze_whitespace: true, verbose: true})
 		<a href="/admin">Link</a>
 
 
-----------
 
-
-- ####`ignore_nodes: {css}` default: **`{}`**
+- `ignore_nodes: {css}` default: **`{}`**
 
     When provided, ignores all **nodes** that satisfy a particular rule using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp).
 
@@ -160,10 +168,8 @@ CompareXML.equivalent?(doc1, doc2, {squeeze_whitespace: true, verbose: true})
 		<a href="/admin"><i class"icon info"></i><b>Message:</b> Link</a>
 
 
-----------
 
-
-- ####`ignore_text_nodes: {true|false}` default: **`false`**
+- `ignore_text_nodes: {true|false}` default: **`false`**
 
     When `true`, ignores all text content. Text content is anything that is included between an opening and a closing tag, e.g. `<tag>THIS IS TEXT CONTENT</tag>`.
 
@@ -180,14 +186,12 @@ CompareXML.equivalent?(doc1, doc2, {squeeze_whitespace: true, verbose: true})
 		<i class="icon>  </i>    <b>Message:</b>
 
 
-----------
 
+- `collapse_whitespace: {true|false}` default: **`true`**
 
-- ####`squeeze_whitespace: {true|false}` default: **`true`**
+    When `true`, all text content within the document is trimmed (i.e. space removed from left and right) and whitespace is collapsed (i.e. tabs, new lines, multiple whitespace characters are replaced by a single whitespace).
 
-    When `true`, all text content within the document is trimmed (i.e. space removed from left and right) and whitespace is squeezed (i.e. tabs, new lines, multiple whitespaces are all replaced by a single whitespace).
-
-	**Usage Example:** `CompareXML.equivalent?(doc1, doc2, {squeeze_whitespace: true})`
+	**Usage Example:** `CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: true})`
 
     **Example:** When `true` the following HTML strings are considered equal:
 
@@ -205,10 +209,8 @@ CompareXML.equivalent?(doc1, doc2, {squeeze_whitespace: true, verbose: true})
 		<html><title>This is my title</title></html>
 
 
-----------
 
-
-- ####`verbose: {true|false}` default: **`false`**
+- `verbose: {true|false}` default: **`false`**
 
     When `true`, instead of returning a boolean value  `CompareXML.equivalent?` returns an array of all errors encountered when performing a comparison.
 
