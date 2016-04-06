@@ -70,16 +70,22 @@ CompareXML.equivalent?(doc1, doc2, {ignore_comments: false, verbose: true, ...})
 
 - `ignore_attr_order: {true|false}` default: **`true`**
 	- when `true`, ignores attribute order within tags
+
 - `ignore_attrs: {css}` default: **`{}`**
-	- When provided, ignores specific *attributes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
+	- when provided, ignores specific *attributes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
+
 - `ignore_comments: {true|false}` default: **`true`**
 	- when `true`, ignores comments, such as `<!-- comment -->`
+
 - `ignore_nodes: {css}` default: **`{}`**
-	- When provided, ignores specific *nodes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
+	- when provided, ignores specific *nodes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
+
 - `ignore_text_nodes: {true|false}` default: **`false`**
 	- when `true`, ignores all text content within a document
+
 - `collapse_whitespace: {true|false}` default: **`true`**
 	- when `true`, trims and collapses whitespace
+
 - `verbose: {true|false}` default: **`false`**
 	- when `true`, instead of a boolean, `CompareXML.equivalent?` returns an array of discrepancies.
 
