@@ -5,67 +5,71 @@ module CompareXML
 
   # default options used by the module; all of these can be overridden
   DEFAULTS_OPTS = {
+      # when true, trims and collapses whitespace in text nodes and comments to a single space
+      # when false, all whitespace is preserved as it is without any changes
+      collapse_whitespace: true,
+
       # when true, attribute order is not important (all attributes are sorted before comparison)
       # when false, attributes are compared in order and comparison stops on the first mismatch
       ignore_attr_order: true,
 
+      # contains an array of user specified strings that is used to ignore any attributes
+      # whose content contains a string from this array (e.g. "good automobile" contains "mobile")
+      ignore_attr_content: [],
+
       # contains an array of user-specified CSS rules used to perform attribute exclusions
       # for this to work, a CSS rule MUST contain the attribute to be excluded,
       # i.e. a[href] will exclude all "href" attributes contained in <a> tags.
-      ignore_attrs: {},
+      ignore_attrs: [],
 
       # when true ignores XML and HTML comments
       # when false, all comments are compared to their counterparts
       ignore_comments: true,
 
       # contains an array of user-specified CSS rules used to perform node exclusions
-      ignore_nodes: {},
+      ignore_nodes: [],
 
       # when true, ignores all text nodes (although blank text nodes are always ignored)
       # when false, all text nodes are compared to their counterparts (except the empty ones)
       ignore_text_nodes: false,
-
-      # when true, trims and collapses whitespace in text nodes and comments to a single space
-      # when false, all whitespace is preserved as it is without any changes
-      collapse_whitespace: true,
 
       # when true, provides a list of all error messages encountered in comparisons
       # when false, execution stops when the first error is encountered with no error messages
       verbose: false
   }
 
-  # used internally only in order to differentiate equivalence for inequivalence
-  EQUIVALENT = 1
-
-  # a list of all possible inequivalence types for nodes
-  # these are returned in the errors array to differentiate error types.
-  MISSING_ATTRIBUTE = 2       # attribute is missing its counterpart
-  MISSING_NODE = 3            # node is missing its counterpart
-  UNEQUAL_ATTRIBUTES = 4      # attributes are not equal
-  UNEQUAL_COMMENTS = 5        # comment contents are not equal
-  UNEQUAL_DOCUMENTS = 6       # document types are not equal
-  UNEQUAL_ELEMENTS = 7        # nodes have the same type but are not equal
-  UNEQUAL_NODES_TYPES = 8     # nodes do not have the same type
-  UNEQUAL_TEXT_CONTENTS = 9   # text contents are not equal
-
 
   class << self
+
+    # used internally only in order to differentiate equivalence for inequivalence
+    EQUIVALENT = 1
+
+    # a list of all possible inequivalence types for nodes
+    # these are returned in the differences array to differentiate error types.
+    MISSING_ATTRIBUTE = 2 # attribute is missing its counterpart
+    MISSING_NODE = 3 # node is missing its counterpart
+    UNEQUAL_ATTRIBUTES = 4 # attributes are not equal
+    UNEQUAL_COMMENTS = 5 # comment contents are not equal
+    UNEQUAL_DOCUMENTS = 6 # document types are not equal
+    UNEQUAL_ELEMENTS = 7 # nodes have the same type but are not equal
+    UNEQUAL_NODES_TYPES = 8 # nodes do not have the same type
+    UNEQUAL_TEXT_CONTENTS = 9 # text node contents are not equal
 
     ##
     # Determines whether two XML documents or fragments are equal to each other.
     # The two parameters could be any type of XML documents, or fragments
     # or node sets or even text nodes - any subclass of Nokogiri::XML::Node.
     #
-    #   @param [Nokogiri::XML::Node] n1 left attribute
-    #   @param [Nokogiri::XML::Node] n2 right attribute
+    #   @param [Nokogiri::XML::Element] n1 left node element
+    #   @param [Nokogiri::XML::Element] n2 right node element
     #   @param [Hash] opts user-overridden options
     #
-    #   @return true if equal, [Array] errors otherwise
+    #   @return true if equal, [Array] differences otherwise
     #
     def equivalent?(n1, n2, opts = {})
-      opts, errors = DEFAULTS_OPTS.merge(opts), []
-      result = compareNodes(n1, n2, opts, errors)
-      opts[:verbose] ? errors : result == EQUIVALENT
+      opts, differences = DEFAULTS_OPTS.merge(opts), []
+      result = compareNodes(n1, n2, opts, differences)
+      opts[:verbose] ? differences : result == EQUIVALENT
     end
 
 
@@ -75,36 +79,38 @@ module CompareXML
     # Compares two nodes for equivalence. The nodes could be any subclass
     # of Nokogiri::XML::Node including node sets and document fragments.
     #
-    #   @param [Nokogiri::XML::Node] n1 left attribute
-    #   @param [Nokogiri::XML::Node] n2 right attribute
+    #   @param [Nokogiri::XML::Node] n1 left node
+    #   @param [Nokogiri::XML::Node] n2 right node
     #   @param [Hash] opts user-overridden options
-    #   @param [Array] errors inequivalence messages
+    #   @param [Array] differences inequivalence messages
+    #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareNodes(n1, n2, opts, errors, status = EQUIVALENT)
+    def compareNodes(n1, n2, opts, differences, status = EQUIVALENT)
       if n1.class == n2.class
         case n1
           when Nokogiri::XML::Comment
-            compareCommentNodes(n1, n2, opts, errors)
+            compareCommentNodes(n1, n2, opts, differences)
           when Nokogiri::HTML::Document
-            compareDocumentNodes(n1, n2, opts, errors)
+            compareDocumentNodes(n1, n2, opts, differences)
           when Nokogiri::XML::Element
-            status = compareElementNodes(n1, n2, opts, errors)
+            status = compareElementNodes(n1, n2, opts, differences)
           when Nokogiri::XML::Text
-            status = compareTextNodes(n1, n2, opts, errors)
+            status = compareTextNodes(n1, n2, opts, differences)
           else
-            status = compareChildren(n1.children, n2.children, opts, errors)
+            if n1.is_a?(Nokogiri::XML::Node) || n1.is_a?(Nokogiri::XML::NodeSet)
+              status = compareChildren(n1.children, n2.children, opts, differences)
+            else
+              raise 'Comparison only allowed between objects of type Nokogiri::XML::Node and Nokogiri::XML::NodeSet.'
+            end
         end
-      elsif n1.nil?
+      elsif n1.nil? || n2.nil?
         status = MISSING_NODE
-        errors << [nodePath(n2), nil, status, n2.name, nodePath(n2)] if opts[:verbose]
-      elsif n2.nil?
-        status = MISSING_NODE
-        errors << [nodePath(n1), n1.name, status, nil, nodePath(n1)] if opts[:verbose]
+        addDifference(n1, n2, n1, n2, opts, differences)
       else
         status = UNEQUAL_NODES_TYPES
-        errors << [nodePath(n1), n1.class, status, n2.class, nodePath(n2)] if opts[:verbose]
+        addDifference(n1, n2, n1, n2, opts, differences)
       end
       status
     end
@@ -113,20 +119,21 @@ module CompareXML
     ##
     # Compares two nodes of type Nokogiri::HTML::Comment.
     #
-    #   @param [Nokogiri::XML::Comment] n1 left attribute
-    #   @param [Nokogiri::XML::Comment] n2 right attribute
+    #   @param [Nokogiri::XML::Comment] n1 left comment
+    #   @param [Nokogiri::XML::Comment] n2 right comment
     #   @param [Hash] opts user-overridden options
-    #   @param [Array] errors inequivalence messages
+    #   @param [Array] differences inequivalence messages
+    #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareCommentNodes(n1, n2, opts, errors, status = EQUIVALENT)
+    def compareCommentNodes(n1, n2, opts, differences, status = EQUIVALENT)
       return true if opts[:ignore_comments]
       t1, t2 = n1.content, n2.content
       t1, t2 = collapse(t1), collapse(t2) if opts[:collapse_whitespace]
       unless t1 == t2
         status = UNEQUAL_COMMENTS
-        errors << [nodePath(n1.parent), t1, status, t2, nodePath(n2.parent)] if opts[:verbose]
+        addDifference(n1, n2, t1, t2, opts, differences)
       end
       status
     end
@@ -135,19 +142,20 @@ module CompareXML
     ##
     # Compares two nodes of type Nokogiri::HTML::Document.
     #
-    #   @param [Nokogiri::XML::Document] n1 left attribute
-    #   @param [Nokogiri::XML::Document] n2 right attribute
+    #   @param [Nokogiri::XML::Document] n1 left document
+    #   @param [Nokogiri::XML::Document] n2 right document
     #   @param [Hash] opts user-overridden options
-    #   @param [Array] errors inequivalence messages
+    #   @param [Array] differences inequivalence messages
+    #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareDocumentNodes(n1, n2, opts, errors, status = EQUIVALENT)
+    def compareDocumentNodes(n1, n2, opts, differences, status = EQUIVALENT)
       if n1.name == n2.name
-        status = compareChildren(n1.children, n2.children, opts, errors)
+        status = compareChildren(n1.children, n2.children, opts, differences)
       else
         status == UNEQUAL_DOCUMENTS
-        errors << [nodePath(n1), n1, status, n2, nodePath(n2)] if opts[:verbose]
+        addDifference(n1, n2, n1, n2, opts, differences)
       end
       status
     end
@@ -159,11 +167,12 @@ module CompareXML
     #   @param [Nokogiri::XML::NodeSet] n1_set left set of Nokogiri::XML::Node elements
     #   @param [Nokogiri::XML::NodeSet] n2_set right set of Nokogiri::XML::Node elements
     #   @param [Hash] opts user-overridden options
-    #   @param [Array] errors inequivalence messages
+    #   @param [Array] differences inequivalence messages
+    #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareChildren(n1_set, n2_set, opts, errors, status = EQUIVALENT)
+    def compareChildren(n1_set, n2_set, opts, differences, status = EQUIVALENT)
       i = 0; j = 0
       while i < n1_set.length || j < n2_set.length
         if !n1_set[i].nil? && nodeExcluded?(n1_set[i], opts)
@@ -171,7 +180,7 @@ module CompareXML
         elsif !n2_set[j].nil? && nodeExcluded?(n2_set[j], opts)
           j += 1 # increment counter if right node is excluded
         else
-          result = compareNodes(n1_set[i], n2_set[j], opts, errors)
+          result = compareNodes(n1_set[i], n2_set[j], opts, differences)
           status = result unless result == EQUIVALENT
 
           # return false so that this subtree could halt comparison on error
@@ -194,22 +203,23 @@ module CompareXML
     # - compares element attributes
     # - recursively compares element children
     #
-    #   @param [Nokogiri::XML::Element] n1 left attribute
-    #   @param [Nokogiri::XML::Element] n2 right attribute
+    #   @param [Nokogiri::XML::Element] n1 left node element
+    #   @param [Nokogiri::XML::Element] n2 right node element
     #   @param [Hash] opts user-overridden options
-    #   @param [Array] errors inequivalence messages
+    #   @param [Array] differences inequivalence messages
+    #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareElementNodes(n1, n2, opts, errors, status = EQUIVALENT)
+    def compareElementNodes(n1, n2, opts, differences, status = EQUIVALENT)
       if n1.name == n2.name
-        result = compareAttributeSets(n1.attribute_nodes, n2.attribute_nodes, opts, errors)
-        status = result unless result == EQUIVALENT
-        result = compareChildren(n1.children, n2.children, opts, errors)
+        result = compareAttributeSets(n1, n2, n1.attribute_nodes, n2.attribute_nodes, opts, differences)
+        return result unless result == EQUIVALENT
+        result = compareChildren(n1.children, n2.children, opts, differences)
         status = result unless result == EQUIVALENT
       else
         status = UNEQUAL_ELEMENTS
-        errors << [nodePath(n1), n1.name, status, n2.name, nodePath(n2)] if opts[:verbose]
+        addDifference(n1, n2, n1.name, n2.name, opts, differences)
       end
       status
     end
@@ -218,41 +228,44 @@ module CompareXML
     ##
     # Compares two nodes of type Nokogiri::XML::Text.
     #
-    #   @param [Nokogiri::XML::Text] n1 left attribute
-    #   @param [Nokogiri::XML::Text] n2 right attribute
+    #   @param [Nokogiri::XML::Text] n1 left text node
+    #   @param [Nokogiri::XML::Text] n2 right text node
     #   @param [Hash] opts user-overridden options
-    #   @param [Array] errors inequivalence messages
+    #   @param [Array] differences inequivalence messages
+    #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareTextNodes(n1, n2, opts, errors, status = EQUIVALENT)
+    def compareTextNodes(n1, n2, opts, differences, status = EQUIVALENT)
       return true if opts[:ignore_text_nodes]
       t1, t2 = n1.content, n2.content
       t1, t2 = collapse(t1), collapse(t2) if opts[:collapse_whitespace]
       unless t1 == t2
         status = UNEQUAL_TEXT_CONTENTS
-        errors << [nodePath(n1.parent), t1, status, t2, nodePath(n2.parent)] if opts[:verbose]
+        addDifference(n1.parent, n2.parent, t1, t2, opts, differences)
       end
       status
     end
 
 
     ##
-    # Compares two sets of Nokogiri::XML::Node attributes.
+    # Compares two sets of Nokogiri::XML::Element attributes.
     #
+    #   @param [Nokogiri::XML::Element] n1 left node element
+    #   @param [Nokogiri::XML::Element] n2 right node element
     #   @param [Array] a1_set left attribute set
     #   @param [Array] a2_set right attribute set
     #   @param [Hash] opts user-overridden options
-    #   @param [Array] errors inequivalence messages
+    #   @param [Array] differences inequivalence messages
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareAttributeSets(a1_set, a2_set, opts, errors)
+    def compareAttributeSets(n1, n2, a1_set, a2_set, opts, differences)
       return false unless a1_set.length == a2_set.length || opts[:verbose]
       if opts[:ignore_attr_order]
-        compareSortedAttributeSets(a1_set, a2_set, opts, errors)
+        compareSortedAttributeSets(n1, n2, a1_set, a2_set, opts, differences)
       else
-        compareUnsortedAttributeSets(a1_set, a2_set, opts, errors)
+        compareUnsortedAttributeSets(n1, n2, a1_set, a2_set, opts, differences)
       end
     end
 
@@ -262,29 +275,34 @@ module CompareXML
     # When the attributes are sorted, only attributes of the same type are compared
     # to each other, and missing attributes can be easily detected.
     #
+    #   @param [Nokogiri::XML::Element] n1 left node element
+    #   @param [Nokogiri::XML::Element] n2 right node element
     #   @param [Array] a1_set left attribute set
     #   @param [Array] a2_set right attribute set
     #   @param [Hash] opts user-overridden options
-    #   @param [Array] errors inequivalence messages
+    #   @param [Array] differences inequivalence messages
+    #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareSortedAttributeSets(a1_set, a2_set, opts, errors, status = EQUIVALENT)
+    def compareSortedAttributeSets(n1, n2, a1_set, a2_set, opts, differences, status = EQUIVALENT)
       a1_set, a2_set = a1_set.sort_by { |a| a.name }, a2_set.sort_by { |a| a.name }
       i = j = 0
 
       while i < a1_set.length || j < a2_set.length
+
         if a1_set[i].nil?
-          result = compareAttributes(nil, a2_set[j], opts, errors); j += 1
+          result = compareAttributes(n1, n2, nil, a2_set[j], opts, differences); j += 1
         elsif a2_set[j].nil?
-          result = compareAttributes(a1_set[i], nil, opts, errors); i += 1
+          result = compareAttributes(n1, n2, a1_set[i], nil, opts, differences); i += 1
         elsif a1_set[i].name < a2_set[j].name
-          result = compareAttributes(a1_set[i], nil, opts, errors); i += 1
+          result = compareAttributes(n1, n2, a1_set[i], nil, opts, differences); i += 1
         elsif a1_set[i].name > a2_set[j].name
-          result = compareAttributes(nil, a2_set[j], opts, errors); j += 1
+          result = compareAttributes(n1, n2, nil, a2_set[j], opts, differences); j += 1
         else
-          result = compareAttributes(a1_set[i], a2_set[j], opts, errors); i += 1; j += 1
+          result = compareAttributes(n1, n2, a1_set[i], a2_set[j], opts, differences); i += 1; j += 1
         end
+
         status = result unless result == EQUIVALENT
         break unless status == EQUIVALENT || opts[:verbose]
       end
@@ -293,21 +311,24 @@ module CompareXML
 
 
     ##
-    # Compares two sets of Nokogiri::XML::Node attributes without sorting them.
+    # Compares two sets of Nokogiri::XML::Element attributes without sorting them.
     # As a result attributes of different types may be compared, and even if all
     # attributes are identical in both sets, if their order is different,
     # the comparison will stop as soon two unequal attributes are found.
     #
+    #   @param [Nokogiri::XML::Element] n1 left node element
+    #   @param [Nokogiri::XML::Element] n2 right node element
     #   @param [Array] a1_set left attribute set
     #   @param [Array] a2_set right attribute set
     #   @param [Hash] opts user-overridden options
-    #   @param [Array] errors inequivalence messages
+    #   @param [Array] differences inequivalence messages
+    #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareUnsortedAttributeSets(a1_set, a2_set, opts, errors, status = EQUIVALENT)
+    def compareUnsortedAttributeSets(n1, n2, a1_set, a2_set, opts, differences, status = EQUIVALENT)
       [a1_set.length, a2_set.length].max.times do |i|
-        result = compareAttributes(a1_set[i], a2_set[i], opts, errors)
+        result = compareAttributes(n1, n2, a1_set[i], a2_set[i], opts, differences)
         status = result unless result == EQUIVALENT
         break unless status == EQUIVALENT
       end
@@ -318,29 +339,33 @@ module CompareXML
     ##
     # Compares two attributes by name and value.
     #
+    #   @param [Nokogiri::XML::Element] n1 left node element
+    #   @param [Nokogiri::XML::Element] n2 right node element
     #   @param [Nokogiri::XML::Attr] a1 left attribute
     #   @param [Nokogiri::XML::Attr] a2 right attribute
     #   @param [Hash] opts user-overridden options
-    #   @param [Array] errors inequivalence messages
+    #   @param [Array] differences inequivalence messages
+    #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareAttributes(a1, a2, opts, errors, status = EQUIVALENT)
+    def compareAttributes(n1, n2, a1, a2, opts, differences, status = EQUIVALENT)
       if a1.nil?
         status = MISSING_ATTRIBUTE
-        errors << [nodePath(a2.parent), nil, status, "#{a2.name}=\"#{a2.value}\"", nodePath(a2.parent)] if opts[:verbose]
+        addDifference(n1, n2, nil, "#{a2.name}=\"#{a2.value}\"", opts, differences)
       elsif a2.nil?
         status = MISSING_ATTRIBUTE
-        errors << [nodePath(a1.parent), "#{a1.name}=\"#{a1.value}\"", status, nil, nodePath(a1.parent)] if opts[:verbose]
+        addDifference(n1, n2, "#{a1.name}=\"#{a1.value}\"", nil, opts, differences)
       elsif a1.name == a2.name
         return status if attrsExcluded?(a1, a2, opts)
+        return status if attrContentExcluded?(a1, a2, opts)
         if a1.value != a2.value
           status = UNEQUAL_ATTRIBUTES
-          errors << [nodePath(a1.parent), "#{a1.name}=\"#{a1.value}\"", status, "#{a2.name}=\"#{a2.value}\"", nodePath(a2.parent)] if opts[:verbose]
+          addDifference(n1, n2, "#{a1.name}=\"#{a1.value}\"", "#{a2.name}=\"#{a2.value}\"", opts, differences)
         end
       else
         status = UNEQUAL_ATTRIBUTES
-        errors << [nodePath(a1.parent), a1.name, status, a2.name, nodePath(a2.parent)] if opts[:verbose]
+        addDifference(n1, n2, "#{a1.name}=\"#{a1.value}\"", "#{a2.name}=\"#{a2.value}\"", opts, differences)
       end
       status
     end
@@ -353,7 +378,7 @@ module CompareXML
     # Several types of nodes are considered ignored:
     # - comments (only in +ignore_comments+ mode)
     # - text nodes (only in +ignore_text_nodes+ mode OR when a text node is empty)
-    # - node matches a user-specified css rule from +ignore_comments+
+    # - node matches a user-specified css rule from +ignore_nodes+
     #
     #   @param [Nokogiri::XML::Node] n node being tested for exclusion
     #   @param [Hash] opts user-overridden options
@@ -361,11 +386,10 @@ module CompareXML
     #   @return true if excluded, false otherwise
     #
     def nodeExcluded?(n, opts)
+      return true if n.is_a?(Nokogiri::XML::DTD)
       return true if n.is_a?(Nokogiri::XML::Comment) && opts[:ignore_comments]
       return true if n.is_a?(Nokogiri::XML::Text) && (opts[:ignore_text_nodes] || collapse(n.content).empty?)
-      opts[:ignore_nodes].each do |css|
-        return true if n.xpath('../*').css(css).include?(n)
-      end
+      opts[:ignore_nodes].each { |css| return true if n.parent.css(css).include? n }
       false
     end
 
@@ -393,43 +417,43 @@ module CompareXML
 
 
     ##
-    # Produces the hierarchical ancestral path of a node in the following format: <html:body:div(3):h2:b(2)>.
-    # This means that the element is located in:
+    # Checks whether two given attributes should be excluded, based on their content.
+    # Checks whether both attributes contain content that should be excluded, and
+    # returns true only if an excluded string is contained in both attribute values.
     #
-    #   <html>
-    #     <body>
-    #       <div>...</div>
-    #       <div>...</div>
-    #       <div>
-    #         <h2>
-    #           <b>...</b>
-    #           <b>TARGET</b>
-    #         </h2>
-    #       </div>
-    #     </body>
-    #   </html>
-    #
-    # Note that the counts of element locations only apply to elements of the same type. For example, div(3) means
-    # that it is the 3rd <div> element in the <body>, but there could be many other elements in between the three
-    # <div> elements.
-    #
-    # When +ignore_comments+ mode is disabled, mismatching comments will show up as <...:comment>.
-    #
-    #   @param [Nokogiri::XML::Node] n node for which to determine a hierarchical path
+    #   @param [Nokogiri::XML::Attr] a1 left attribute
+    #   @param [Nokogiri::XML::Attr] a2 right attribute
+    #   @param [Hash] opts user-overridden options
     #
     #   @return true if excluded, false otherwise
     #
-    def nodePath(n)
-      name = n.name
+    def attrContentExcluded?(a1, a2, opts)
+      a1_excluded, a2_excluded = false, false
+      opts[:ignore_attr_content].each do |content|
+        a1_excluded = a1_excluded || a1.value.include?(content)
+        a2_excluded = a2_excluded || a2.value.include?(content)
+        return true if a1_excluded && a2_excluded
+      end
+      false
+    end
 
-      # find the index of the node if there are several of the same type
-      siblings = n.xpath("../#{name}")
-      name += "(#{siblings.index(n) + 1})" if siblings.length > 1
 
-      if defined? n.parent
-        status = "#{nodePath(n.parent)}:#{name}"
-        status = status[1..-1] if status[0] == ':'
-        status
+    ##
+    # Strips the whitespace (from beginning and end) and collapses it,
+    # i.e. multiple spaces, new lines and tabs are all collapsed to a single space.
+    #
+    #   @param [Nokogiri::XML::Node] node1 left node
+    #   @param [Nokogiri::XML::Node] node2 right node
+    #   @param [String] diff1 left diffing value
+    #   @param [String] diff2 right diffing value
+    #   @param [Hash] opts user-overridden options
+    #   @param [Array] differences inequivalence messages
+    #
+    #   @return collapsed string
+    #
+    def addDifference(node1, node2, diff1, diff2, opts, differences)
+      if opts[:verbose]
+        differences << {node1: node1, node2: node2, diff1: diff1, diff2: diff2}
       end
     end
 
