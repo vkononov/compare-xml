@@ -68,28 +68,28 @@ CompareXML has a variety of options that can be invoked as an optional argument,
 CompareXML.equivalent?(doc1, doc2, {ignore_comments: false, verbose: true, ...})
 ```
 
-- `collapse_whitespace: {true|false}` default: **`true`** [&rarr; read more &larr;](#collapse_whitespace)
+- `collapse_whitespace: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#collapse_whitespace)
     - when `true`, trims and collapses whitespace
 
-- `ignore_attr_order: {true|false}` default: **`true`** [&rarr; read more &larr;](#ignore_attr_order)
+- `ignore_attr_order: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_attr_order)
     - when `true`, ignores attribute order within tags
 
-- `ignore_attr_content: [string1, string2, ...]` default: **`[]`** [&rarr; read more &larr;](#ignore_attr_content)
+- `ignore_attr_content: [string1, string2, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_attr_content)
     - when provided, ignores all attributes that contain substrings `string`, `string2`, etc.
 
-- `ignore_attrs: [css_selector1, css_selector1, ...]` default: **`[]`** [&rarr; read more &larr;](#ignore_attrs)
+- `ignore_attrs: [css_selector1, css_selector1, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_attrs)
     - when provided, ignores specific *attributes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
 
-- `ignore_comments: {true|false}` default: **`true`** [...](#ignore_comments)
+- `ignore_comments: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_comments)
     - when `true`, ignores comments, such as `<!-- comment -->`
 
-- `ignore_nodes: [css_selector1, css_selector1, ...]` default: **`[]`** [&rarr; read more &larr;](#ignore_nodes)
+- `ignore_nodes: [css_selector1, css_selector1, ...]` default: **`[]`** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_nodes)
     - when provided, ignores specific *nodes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
 
-- `ignore_text_nodes: {true|false}` default: **`false`** [&rarr; read more &larr;](#ignore_text_nodes)
+- `ignore_text_nodes: {true|false}` default: **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_text_nodes)
     - when `true`, ignores all text content within a document
 
-- `verbose: {true|false}` default: **`false`** [&rarr; read more &larr;](#verbose)
+- `verbose: {true|false}` default: **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#verbose)
     - when `true`, instead of a boolean, `CompareXML.equivalent?` returns an array of discrepancies.
 
 
