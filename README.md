@@ -293,7 +293,7 @@ CompareXML.equivalent?(doc1, doc2, {ignore_comments: false, verbose: true, ...})
         },
         {
             node1: '<p class="footer">FOOTER</p>',
-            node1: '<div class="footer">FOOTER</div>',
+            node2: '<div class="footer">FOOTER</div>',
             diff1: 'p',
             diff2: 'div',
         }
