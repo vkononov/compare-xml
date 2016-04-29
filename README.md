@@ -305,7 +305,7 @@ CompareXML.equivalent?(doc1, doc2, {ignore_comments: false, verbose: true, ...})
         node1: [Nokogiri::XML::Node] left node that contains the difference
         node2: [Nokogiri::XML::Node] right node that contains the difference
         diff1: [Nokogiri::XML::Node|String] left difference
-        diff1: [Nokogiri::XML::Node|String] right difference
+        diff2: [Nokogiri::XML::Node|String] right difference
 
 
 
