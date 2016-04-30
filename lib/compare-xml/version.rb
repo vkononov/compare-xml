@@ -1,3 +1,3 @@
 module CompareXML
-  VERSION = '0.6'
+  VERSION = '0.61'
 end

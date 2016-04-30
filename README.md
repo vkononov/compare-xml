@@ -17,17 +17,15 @@ CompareXML is a fast, lightweight and feature-rich tool that will solve your XML
 
 Add this line to your application's Gemfile:
 
-```ruby
-gem 'compare-xml'
-```
+    gem 'compare-xml'
 
 And then execute:
 
-    $ bundle
+    bundle
 
 Or install it yourself as:
 
-    $ gem install compare-xml
+    gem install compare-xml
 
 
 
@@ -65,31 +63,31 @@ require 'compare-xml'
 CompareXML has a variety of options that can be invoked as an optional argument, e.g.:
 
 ```ruby
-CompareXML.equivalent?(doc1, doc2, {ignore_comments: false, verbose: true, ...})
+CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true, ...})
 ```
 
-- `collapse_whitespace: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#collapse_whitespace)
+- `collapse_whitespace: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[⇨ show examples ⇦](#collapse_whitespace)
     - when `true`, trims and collapses whitespace
 
-- `ignore_attr_order: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_attr_order)
+- `ignore_attr_order: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[⇨ show examples ⇦](#ignore_attr_order)
     - when `true`, ignores attribute order within tags
 
-- `ignore_attr_content: [string1, string2, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_attr_content)
+- `ignore_attr_content: [string1, string2, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[⇨ show examples ⇦](#ignore_attr_content)
     - when provided, ignores all attributes that contain substrings `string`, `string2`, etc.
 
-- `ignore_attrs: [css_selector1, css_selector1, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_attrs)
+- `ignore_attrs: [css_selector1, css_selector1, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[⇨ show examples ⇦](#ignore_attrs)
     - when provided, ignores specific *attributes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
 
-- `ignore_comments: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_comments)
+- `ignore_comments: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[⇨ show examples ⇦](#ignore_comments)
     - when `true`, ignores comments, such as `<!-- comment -->`
 
-- `ignore_nodes: [css_selector1, css_selector1, ...]` default: **`[]`** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_nodes)
+- `ignore_nodes: [css_selector1, css_selector1, ...]` default: **`[]`** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[⇨ show examples ⇦](#ignore_nodes)
     - when provided, ignores specific *nodes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
 
-- `ignore_text_nodes: {true|false}` default: **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#ignore_text_nodes)
+- `ignore_text_nodes: {true|false}` default: **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[⇨ show examples ⇦](#ignore_text_nodes)
     - when `true`, ignores all text content within a document
 
-- `verbose: {true|false}` default: **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[&Rarr; read more &Larr;](#verbose)
+- `verbose: {true|false}` default: **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[⇨ show examples ⇦](#verbose)
     - when `true`, instead of a boolean, `CompareXML.equivalent?` returns an array of discrepancies.
 
 
@@ -261,7 +259,7 @@ CompareXML.equivalent?(doc1, doc2, {ignore_comments: false, verbose: true, ...})
 
     **Example:** When `true` given the following HTML strings:
 
-    ![diffing](img/diffing.png)
+    ![diffing](https://github.com/vkononov/compare-xml/raw/master/img/diffing.png)
 
     `CompareXML.equivalent?(doc1, doc2, {verbose: true})` will produce an array shown below.
 

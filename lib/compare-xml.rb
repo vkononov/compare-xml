@@ -133,7 +133,7 @@ module CompareXML
       t1, t2 = collapse(t1), collapse(t2) if opts[:collapse_whitespace]
       unless t1 == t2
         status = UNEQUAL_COMMENTS
-        addDifference(n1, n2, t1, t2, opts, differences)
+        addDifference(n1.parent, n2.parent, t1, t2, opts, differences)
       end
       status
     end
