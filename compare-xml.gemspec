@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = %q{A customizable tool that compares two instances of Nokogiri::XML::Node for equality or equivalency.}
   spec.description   = %q{CompareXML is a fast, lightweight and feature-rich tool that will solve your XML/HTML comparison or diffing needs. its purpose is to compare two instances of Nokogiri::XML::Node or Nokogiri::XML::NodeSet for equality or equivalency.}
-  spec.homepage      = 'https:/vkononov.github.io/compare-xml/'
+  spec.homepage      = 'http://vkononov.github.io/compare-xml'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
