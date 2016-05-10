@@ -110,7 +110,13 @@ module CompareXML
         addDifference(n1, n2, n1, n2, opts, differences)
       else
         status = UNEQUAL_NODES_TYPES
-        addDifference(n1, n2, n1, n2, opts, differences)
+        if n1.is_a? Nokogiri::XML::Text
+          addDifference(n1.parent, n2, n1, n2, opts, differences)
+        elsif n2.is_a? Nokogiri::XML::Text
+          addDifference(n1, n2.parent, n1, n2, opts, differences)
+        else
+          addDifference(n1, n2, n1, n2, opts, differences)
+        end
       end
       status
     end
