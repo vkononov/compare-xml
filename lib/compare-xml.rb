@@ -172,7 +172,7 @@ module CompareXML
     #
     def compareDocumentNodes(n1, n2, opts, differences, childopts = {}, diffchildren = false, status = EQUIVALENT)
       if n1.name == n2.name
-        status = diffchildren == true ? compareChildren(n1.children, n2.children, childopts, difference, diffchildren) : compareChildren(n1.children, n2.children, opts, differences)
+        status = diffchildren == true ? compareChildren(n1.children, n2.children, childopts, differences, diffchildren) : compareChildren(n1.children, n2.children, opts, differences)
       else
         status == UNEQUAL_DOCUMENTS
         addDifference(n1, n2, n1, n2, opts, differences)
