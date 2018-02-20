@@ -2,45 +2,42 @@ require 'compare-xml/version'
 require 'nokogiri'
 
 module CompareXML
-
   # default options used by the module; all of these can be overridden
   DEFAULTS_OPTS = {
-      # when true, trims and collapses whitespace in text nodes and comments to a single space
-      # when false, all whitespace is preserved as it is without any changes
-      collapse_whitespace: true,
+    # when true, trims and collapses whitespace in text nodes and comments to a single space
+    # when false, all whitespace is preserved as it is without any changes
+    collapse_whitespace: true,
 
-      # when true, attribute order is not important (all attributes are sorted before comparison)
-      # when false, attributes are compared in order and comparison stops on the first mismatch
-      ignore_attr_order: true,
+    # when true, attribute order is not important (all attributes are sorted before comparison)
+    # when false, attributes are compared in order and comparison stops on the first mismatch
+    ignore_attr_order: true,
 
-      # contains an array of user specified strings that is used to ignore any attributes
-      # whose content contains a string from this array (e.g. "good automobile" contains "mobile")
-      ignore_attr_content: [],
+    # contains an array of user specified strings that is used to ignore any attributes
+    # whose content contains a string from this array (e.g. "good automobile" contains "mobile")
+    ignore_attr_content: [],
 
-      # contains an array of user-specified CSS rules used to perform attribute exclusions
-      # for this to work, a CSS rule MUST contain the attribute to be excluded,
-      # i.e. a[href] will exclude all "href" attributes contained in <a> tags.
-      ignore_attrs: [],
+    # contains an array of user-specified CSS rules used to perform attribute exclusions
+    # for this to work, a CSS rule MUST contain the attribute to be excluded,
+    # i.e. a[href] will exclude all "href" attributes contained in <a> tags.
+    ignore_attrs: [],
 
-      # when true ignores XML and HTML comments
-      # when false, all comments are compared to their counterparts
-      ignore_comments: true,
+    # when true ignores XML and HTML comments
+    # when false, all comments are compared to their counterparts
+    ignore_comments: true,
 
-      # contains an array of user-specified CSS rules used to perform node exclusions
-      ignore_nodes: [],
+    # contains an array of user-specified CSS rules used to perform node exclusions
+    ignore_nodes: [],
 
-      # when true, ignores all text nodes (although blank text nodes are always ignored)
-      # when false, all text nodes are compared to their counterparts (except the empty ones)
-      ignore_text_nodes: false,
+    # when true, ignores all text nodes (although blank text nodes are always ignored)
+    # when false, all text nodes are compared to their counterparts (except the empty ones)
+    ignore_text_nodes: false,
 
-      # when true, provides a list of all error messages encountered in comparisons
-      # when false, execution stops when the first error is encountered with no error messages
-      verbose: false
-  }
-
+    # when true, provides a list of all error messages encountered in comparisons
+    # when false, execution stops when the first error is encountered with no error messages
+    verbose: false
+  }.freeze
 
   class << self
-
     # used internally only in order to differentiate equivalence for inequivalence
     EQUIVALENT = 1
 
@@ -67,11 +64,11 @@ module CompareXML
     #   @return true if equal, [Array] differences otherwise
     #
     def equivalent?(n1, n2, opts = {})
-      opts, differences = DEFAULTS_OPTS.merge(opts), []
+      opts = DEFAULTS_OPTS.merge(opts)
+      differences = []
       result = compareNodes(n1, n2, opts, differences)
       opts[:verbose] ? differences : result == EQUIVALENT
     end
-
 
     private
 
@@ -90,20 +87,17 @@ module CompareXML
     def compareNodes(n1, n2, opts, differences, status = EQUIVALENT)
       if n1.class == n2.class
         case n1
-          when Nokogiri::XML::Comment
-            compareCommentNodes(n1, n2, opts, differences)
-          when Nokogiri::HTML::Document
-            compareDocumentNodes(n1, n2, opts, differences)
-          when Nokogiri::XML::Element
-            status = compareElementNodes(n1, n2, opts, differences)
-          when Nokogiri::XML::Text
-            status = compareTextNodes(n1, n2, opts, differences)
-          else
-            if n1.is_a?(Nokogiri::XML::Node) || n1.is_a?(Nokogiri::XML::NodeSet)
-              status = compareChildren(n1.children, n2.children, opts, differences)
-            else
-              raise 'Comparison only allowed between objects of type Nokogiri::XML::Node and Nokogiri::XML::NodeSet.'
-            end
+        when Nokogiri::XML::Comment
+          status = compareCommentNodes(n1, n2, opts, differences)
+        when Nokogiri::HTML::Document
+          status = compareDocumentNodes(n1, n2, opts, differences)
+        when Nokogiri::XML::Element
+          status = compareElementNodes(n1, n2, opts, differences)
+        when Nokogiri::XML::Text
+          status = compareTextNodes(n1, n2, opts, differences)
+        else
+          raise 'Comparison only allowed between objects of type Nokogiri::XML::Node and Nokogiri::XML::NodeSet.' unless n1.is_a?(Nokogiri::XML::Node) || n1.is_a?(Nokogiri::XML::NodeSet)
+          status = compareChildren(n1.children, n2.children, opts, differences)
         end
       elsif n1.nil? || n2.nil?
         status = MISSING_NODE
@@ -121,7 +115,6 @@ module CompareXML
       status
     end
 
-
     ##
     # Compares two nodes of type Nokogiri::HTML::Comment.
     #
@@ -135,15 +128,18 @@ module CompareXML
     #
     def compareCommentNodes(n1, n2, opts, differences, status = EQUIVALENT)
       return true if opts[:ignore_comments]
-      t1, t2 = n1.content, n2.content
-      t1, t2 = collapse(t1), collapse(t2) if opts[:collapse_whitespace]
+      t1 = n1.content
+      t2 = n2.content
+      if opts[:collapse_whitespace]
+        t1 = collapse(t1)
+        t2 = collapse(t2)
+      end
       unless t1 == t2
         status = UNEQUAL_COMMENTS
         addDifference(n1.parent, n2.parent, t1, t2, opts, differences)
       end
       status
     end
-
 
     ##
     # Compares two nodes of type Nokogiri::HTML::Document.
@@ -160,12 +156,11 @@ module CompareXML
       if n1.name == n2.name
         status = compareChildren(n1.children, n2.children, opts, differences)
       else
-        status == UNEQUAL_DOCUMENTS
+        status = UNEQUAL_DOCUMENTS
         addDifference(n1, n2, n1, n2, opts, differences)
       end
       status
     end
-
 
     ##
     # Compares two sets of Nokogiri::XML::NodeSet elements.
@@ -191,7 +186,7 @@ module CompareXML
 
           # return false so that this subtree could halt comparison on error
           # but neighbours of parents' subtrees could still be compared (in verbose mode)
-          return false if status == UNEQUAL_NODES_TYPES || status == UNEQUAL_ELEMENTS
+          return false if [UNEQUAL_NODES_TYPES, UNEQUAL_ELEMENTS].include? status
 
           # stop execution if a single error is found (unless in verbose mode)
           break unless status == EQUIVALENT || opts[:verbose]
@@ -202,7 +197,6 @@ module CompareXML
         status
       end
     end
-
 
     ##
     # Compares two nodes of type Nokogiri::XML::Element.
@@ -230,7 +224,6 @@ module CompareXML
       status
     end
 
-
     ##
     # Compares two nodes of type Nokogiri::XML::Text.
     #
@@ -244,15 +237,18 @@ module CompareXML
     #
     def compareTextNodes(n1, n2, opts, differences, status = EQUIVALENT)
       return true if opts[:ignore_text_nodes]
-      t1, t2 = n1.content, n2.content
-      t1, t2 = collapse(t1), collapse(t2) if opts[:collapse_whitespace]
+      t1 = n1.content
+      t2 = n2.content
+      if opts[:collapse_whitespace]
+        t1 = collapse(t1)
+        t2 = collapse(t2)
+      end
       unless t1 == t2
         status = UNEQUAL_TEXT_CONTENTS
         addDifference(n1.parent, n2.parent, t1, t2, opts, differences)
       end
       status
     end
-
 
     ##
     # Compares two sets of Nokogiri::XML::Element attributes.
@@ -275,7 +271,6 @@ module CompareXML
       end
     end
 
-
     ##
     # Compares two sets of Nokogiri::XML::Node attributes by sorting them first.
     # When the attributes are sorted, only attributes of the same type are compared
@@ -292,7 +287,8 @@ module CompareXML
     #   @return type of equivalence (from equivalence constants)
     #
     def compareSortedAttributeSets(n1, n2, a1_set, a2_set, opts, differences, status = EQUIVALENT)
-      a1_set, a2_set = a1_set.sort_by { |a| a.name }, a2_set.sort_by { |a| a.name }
+      a1_set = a1_set.sort_by(&:name)
+      a2_set = a2_set.sort_by(&:name)
       i = j = 0
 
       while i < a1_set.length || j < a2_set.length
@@ -314,7 +310,6 @@ module CompareXML
       end
       status
     end
-
 
     ##
     # Compares two sets of Nokogiri::XML::Element attributes without sorting them.
@@ -340,7 +335,6 @@ module CompareXML
       end
       status
     end
-
 
     ##
     # Compares two attributes by name and value.
@@ -376,7 +370,6 @@ module CompareXML
       status
     end
 
-
     ##
     # Determines if a node should be excluded from the comparison. When a node is excluded,
     # it is completely ignored, as if it did not exist.
@@ -399,7 +392,6 @@ module CompareXML
       false
     end
 
-
     ##
     # Checks whether two given attributes should be excluded, based on a user-specified css rule.
     # If true, only the specified attributes are ignored; all remaining attributes are still compared.
@@ -421,7 +413,6 @@ module CompareXML
       false
     end
 
-
     ##
     # Checks whether two given attributes should be excluded, based on their content.
     # Checks whether both attributes contain content that should be excluded, and
@@ -434,15 +425,15 @@ module CompareXML
     #   @return true if excluded, false otherwise
     #
     def attrContentExcluded?(a1, a2, opts)
-      a1_excluded, a2_excluded = false, false
+      a1_excluded = false
+      a2_excluded = false
       opts[:ignore_attr_content].each do |content|
-        a1_excluded = a1_excluded || a1.value.include?(content)
-        a2_excluded = a2_excluded || a2.value.include?(content)
+        a1_excluded ||= a1.value.include?(content)
+        a2_excluded ||= a2.value.include?(content)
         return true if a1_excluded && a2_excluded
       end
       false
     end
-
 
     ##
     # Strips the whitespace (from beginning and end) and collapses it,
@@ -458,11 +449,8 @@ module CompareXML
     #   @return collapsed string
     #
     def addDifference(node1, node2, diff1, diff2, opts, differences)
-      if opts[:verbose]
-        differences << {node1: node1, node2: node2, diff1: diff1, diff2: diff2}
-      end
+      differences << { node1: node1, node2: node2, diff1: diff1, diff2: diff2 } if opts[:verbose]
     end
-
 
     ##
     # Strips the whitespace (from beginning and end) and collapses it,
@@ -476,7 +464,5 @@ module CompareXML
       text = text.to_s unless text.is_a? String
       text.strip.gsub(/\s+/, ' ')
     end
-
   end
-
 end
