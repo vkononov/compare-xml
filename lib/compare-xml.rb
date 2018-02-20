@@ -12,6 +12,10 @@ module CompareXML
     # when false, attributes are compared in order and comparison stops on the first mismatch
     ignore_attr_order: true,
 
+    # when true, children of elements are always compared
+    # when false, children of elements are not compared if the root is different
+    force_children: false,
+
     # contains an array of user specified strings that is used to ignore any attributes
     # whose content contains a string from this array (e.g. "good automobile" contains "mobile")
     ignore_attr_content: [],
@@ -20,6 +24,10 @@ module CompareXML
     # for this to work, a CSS rule MUST contain the attribute to be excluded,
     # i.e. a[href] will exclude all "href" attributes contained in <a> tags.
     ignore_attrs: [],
+
+    # contains an array of user specified strings that is used to ignore any attributes
+    # whose name contains a string from this array (e.g. "good automobile" contains "mobile")
+    ignore_attrs_by_name: [],
 
     # when true ignores XML and HTML comments
     # when false, all comments are compared to their counterparts
@@ -60,13 +68,14 @@ module CompareXML
     #   @param [Nokogiri::XML::Element] n1 left node element
     #   @param [Nokogiri::XML::Element] n2 right node element
     #   @param [Hash] opts user-overridden options
+    #   @param [Hash] childopts user-overridden options used for the child nodes
+    #   @param [Bool] diffchildren use different options for the child nodes
     #
     #   @return true if equal, [Array] differences otherwise
     #
-    def equivalent?(n1, n2, opts = {})
-      opts = DEFAULTS_OPTS.merge(opts)
-      differences = []
-      result = compareNodes(n1, n2, opts, differences)
+    def equivalent?(n1, n2, opts = {}, childopts = {}, diffchildren = false)
+      opts, childopts, differences = DEFAULTS_OPTS.merge(opts), DEFAULTS_OPTS.merge(childopts), []
+      result = diffchildren == true ? compareNodes(n1, n2, opts, differences, childopts, diffchildren) : compareNodes(n1, n2, opts, differences)
       opts[:verbose] ? differences : result == EQUIVALENT
     end
 
@@ -80,24 +89,26 @@ module CompareXML
     #   @param [Nokogiri::XML::Node] n2 right node
     #   @param [Hash] opts user-overridden options
     #   @param [Array] differences inequivalence messages
+    #   @param [Hash] childopts user-overridden options used for the child nodes
+    #   @param [Bool] diffchildren use different options for the child nodes
     #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareNodes(n1, n2, opts, differences, status = EQUIVALENT)
+    def compareNodes(n1, n2, opts, differences, childopts = {}, diffchildren = false, status = EQUIVALENT)
       if n1.class == n2.class
         case n1
-        when Nokogiri::XML::Comment
-          status = compareCommentNodes(n1, n2, opts, differences)
-        when Nokogiri::HTML::Document
-          status = compareDocumentNodes(n1, n2, opts, differences)
-        when Nokogiri::XML::Element
-          status = compareElementNodes(n1, n2, opts, differences)
-        when Nokogiri::XML::Text
-          status = compareTextNodes(n1, n2, opts, differences)
-        else
-          raise 'Comparison only allowed between objects of type Nokogiri::XML::Node and Nokogiri::XML::NodeSet.' unless n1.is_a?(Nokogiri::XML::Node) || n1.is_a?(Nokogiri::XML::NodeSet)
-          status = compareChildren(n1.children, n2.children, opts, differences)
+          when Nokogiri::XML::Comment
+            status = compareCommentNodes(n1, n2, opts, differences)
+          when Nokogiri::HTML::Document
+            diffchildren == true ? status = compareDocumentNodes(n1, n2, opts, differences, childopts, diffchildren) : compareDocumentNodes(n1, n2, opts, differences)
+          when Nokogiri::XML::Element
+            diffchildren == true ? compareElementNodes(n1, n2, opts, differences, childopts, diffchildren) : compareElementNodes(n1, n2, opts, differences)
+          when Nokogiri::XML::Text
+            status = compareTextNodes(n1, n2, opts, differences)
+          else
+            raise 'Comparison only allowed between objects of type Nokogiri::XML::Node and Nokogiri::XML::NodeSet.' unless n1.is_a?(Nokogiri::XML::Node) || n1.is_a?(Nokogiri::XML::NodeSet)
+            status = compareChildren(n1.children, n2.children, opts, differences)
         end
       elsif n1.nil? || n2.nil?
         status = MISSING_NODE
@@ -148,13 +159,15 @@ module CompareXML
     #   @param [Nokogiri::XML::Document] n2 right document
     #   @param [Hash] opts user-overridden options
     #   @param [Array] differences inequivalence messages
+    #   @param [Hash] childopts user-overridden options used for the child nodes
+    #   @param [Bool] diffchildren use different options for the child nodes
     #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareDocumentNodes(n1, n2, opts, differences, status = EQUIVALENT)
+    def compareDocumentNodes(n1, n2, opts, differences, childopts = {}, diffchildren = false, status = EQUIVALENT)
       if n1.name == n2.name
-        status = compareChildren(n1.children, n2.children, opts, differences)
+        status = diffchildren == true ? compareChildren(n1.children, n2.children, childopts, differences, diffchildren) : compareChildren(n1.children, n2.children, opts, differences)
       else
         status = UNEQUAL_DOCUMENTS
         addDifference(n1, n2, n1, n2, opts, differences)
@@ -169,11 +182,12 @@ module CompareXML
     #   @param [Nokogiri::XML::NodeSet] n2_set right set of Nokogiri::XML::Node elements
     #   @param [Hash] opts user-overridden options
     #   @param [Array] differences inequivalence messages
+    #   @param [Bool] diffchildren use different options for the child nodes
     #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareChildren(n1_set, n2_set, opts, differences, status = EQUIVALENT)
+    def compareChildren(n1_set, n2_set, opts, differences, diffchildren = false, status = EQUIVALENT)
       i = 0; j = 0
       while i < n1_set.length || j < n2_set.length
         if !n1_set[i].nil? && nodeExcluded?(n1_set[i], opts)
@@ -181,7 +195,7 @@ module CompareXML
         elsif !n2_set[j].nil? && nodeExcluded?(n2_set[j], opts)
           j += 1 # increment counter if right node is excluded
         else
-          result = compareNodes(n1_set[i], n2_set[j], opts, differences)
+          result = diffchildren == true ? compareNodes(n1_set[i], n2_set[j], opts, differences, opts, diffchildren) : compareNodes(n1_set[i], n2_set[j], opts, differences)
           status = result unless result == EQUIVALENT
 
           # return false so that this subtree could halt comparison on error
@@ -207,15 +221,17 @@ module CompareXML
     #   @param [Nokogiri::XML::Element] n2 right node element
     #   @param [Hash] opts user-overridden options
     #   @param [Array] differences inequivalence messages
+    #   @param [Hash] childopts user-overridden options used for the child nodes
+    #   @param [Bool] diffchildren use different options for the child nodes
     #   @param [int] status comparison status code (EQUIVALENT by default)
     #
     #   @return type of equivalence (from equivalence constants)
     #
-    def compareElementNodes(n1, n2, opts, differences, status = EQUIVALENT)
+    def compareElementNodes(n1, n2, opts, differences, childopts = {}, diffchildren = false, status = EQUIVALENT)
       if n1.name == n2.name
         result = compareAttributeSets(n1, n2, n1.attribute_nodes, n2.attribute_nodes, opts, differences)
-        return result unless result == EQUIVALENT
-        result = compareChildren(n1.children, n2.children, opts, differences)
+        return result unless result == EQUIVALENT || opts[:force_children] == true
+        result = diffchildren == true ? compareChildren(n1.children, n2.children, childopts, differences, diffchildren) : compareChildren(n1.children, n2.children, opts, differences)
         status = result unless result == EQUIVALENT
       else
         status = UNEQUAL_ELEMENTS
@@ -357,6 +373,7 @@ module CompareXML
         status = MISSING_ATTRIBUTE
         addDifference(n1, n2, "#{a1.name}=\"#{a1.value}\"", nil, opts, differences)
       elsif a1.name == a2.name
+        return status if attrNameExcluded?(a1.name, a2.name, opts)
         return status if attrsExcluded?(a1, a2, opts)
         return status if attrContentExcluded?(a1, a2, opts)
         if a1.value != a2.value
@@ -430,6 +447,27 @@ module CompareXML
       opts[:ignore_attr_content].each do |content|
         a1_excluded ||= a1.value.include?(content)
         a2_excluded ||= a2.value.include?(content)
+        return true if a1_excluded && a2_excluded
+      end
+      false
+    end
+
+    ##
+    # Checks whether two given attributes should be excluded, based on their content.
+    # Checks whether both attributes contain content that should be excluded, and
+    # returns true only if an excluded string is contained in both attribute values.
+    #
+    #   @param [Nokogiri::XML::Attr] a1 left attribute
+    #   @param [Nokogiri::XML::Attr] a2 right attribute
+    #   @param [Hash] opts user-overridden options
+    #
+    #   @return true if excluded, false otherwise
+    #
+    def attrNameExcluded?(a1, a2, opts)
+      a1_excluded, a2_excluded = false, false
+      opts[:ignore_attrs_by_name].each do |name|
+        a1_excluded = a1_excluded || a1.to_s.include?(name)
+        a2_excluded = a2_excluded || a2.to_s.include?(name)
         return true if a1_excluded && a2_excluded
       end
       false
