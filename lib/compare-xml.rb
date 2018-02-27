@@ -16,6 +16,10 @@ module CompareXML
     # when false, children of elements are not compared if the root is different
     force_children: false,
 
+    # when true, children of elements are never compared
+    # when false, children of elements are compared if root if different or see force_children
+    ignore_children: false,
+
     # contains an array of user specified strings that is used to ignore any attributes
     # whose content contains a string from this array (e.g. "good automobile" contains "mobile")
     ignore_attr_content: [],
@@ -191,6 +195,7 @@ module CompareXML
     #
     def compareChildren(n1_set, n2_set, opts, differences, diffchildren = false, status = EQUIVALENT)
       i = 0; j = 0
+      return if opts[:ignore_children]
       while i < n1_set.length || j < n2_set.length
         if !n1_set[i].nil? && nodeExcluded?(n1_set[i], opts)
           i += 1 # increment counter if left node is excluded
