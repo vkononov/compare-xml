@@ -78,6 +78,9 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true, .
 - `ignore_attrs: [css_selector1, css_selector1, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_attrs)
     - when provided, ignores specific *attributes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
 
+- `ignore_attrs_by_name: [string1, string2, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_attrs_by_name)
+    - when provided, ignores specific *attributes* using [String]
+
 - `ignore_comments: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_comments)
     - when `true`, ignores comments, such as `<!-- comment -->`
 
@@ -89,6 +92,12 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true, .
 
 - `verbose: {true|false}` default: **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#verbose)
     - when `true`, instead of a boolean, `CompareXML.equivalent?` returns an array of discrepancies.
+
+- `ignore_children {true|false}` default **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_children)
+    - when `true`, the subnodes of a node in the xml are ignored
+
+- `force_children {true|false}` default **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#force_children)
+    - when `true`, the subnodes of a node are checked independently of the status of the parent node
 
 
 ## Options in Depth
@@ -185,6 +194,18 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true, .
         <a href="http://google.ca" class="primary button">Link</a>
         <a href="https://google.com" class="primary button rounded">Link</a>
 
+----------
+
+- <a id="ignore_attrs_by_name"></a>`ignore_attrs_by_name: [string1, string2, ...]` default: **`false`**
+
+    When provided, ignores all **attributes** which name is specified in the string array.
+
+     **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {ignore_attrs_by_name: ['target'])`
+
+    **Example:** With `ignore_attrs_by_name: ['target', 'rel']` the following HTML strings are considered equal:
+
+        <a href="/admin" class="button" target="_blank">Link</a>
+        <a href="/admin" class="button" target="_self" rel="nofollow">Link</a>
 
 ----------
 
@@ -305,7 +326,28 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true, .
         diff1: [Nokogiri::XML::Node|String] left difference
         diff2: [Nokogiri::XML::Node|String] right difference
 
+----------
 
+- <a id="ignore_children"></a>`ignore_children: {true|false}` default: **`false`**
+
+    When provided, ignores all **subnodes** of any node.
+
+    **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {ignore_children: true})`
+
+    **Example:** With `ignore_children: true` the following HTML strings are considered equal:
+
+        <body><a href="/admin" class="icon" target="_blank">Link 1</a></body>
+        <body><a href="/index" class="button" target="_self" rel="nofollow">Link 2</a></body>
+
+----------
+
+- <a id="force_children"></a>`force_children: {true|false}` default: **`false`**
+
+    When provided, compares all **subnodes** of any node.
+
+    **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {ignore_children: true})`
+
+----------
 
 ## Contributing
 
