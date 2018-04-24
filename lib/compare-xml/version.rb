@@ -1,3 +1,3 @@
 module CompareXML
-  VERSION = '0.65'.freeze
+  VERSION = '0.66'.freeze
 end

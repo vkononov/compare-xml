@@ -32,6 +32,9 @@ Naming/FileName:
 Naming/MethodName:
   Enabled: false
 
+Naming/UncommunicativeMethodParamName:
+  Enabled: false
+
 Style/Documentation:
   Enabled: false
 

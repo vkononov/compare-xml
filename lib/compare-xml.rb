@@ -17,7 +17,7 @@ module CompareXML
     force_children: false,
 
     # when true, children of elements are never compared
-    # when false, children of elements are compared if root if different or see force_children
+    # when false, children of elements are compared if root is different or see force_children
     ignore_children: false,
 
     # contains an array of user specified strings that is used to ignore any attributes
