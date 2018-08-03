@@ -345,7 +345,7 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true, .
 
     When provided, compares all **subnodes** of any node.
 
-    **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {ignore_children: true})`
+    **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {force_children: true})`
 
 ----------
 
