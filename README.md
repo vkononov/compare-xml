@@ -65,7 +65,7 @@ require 'compare-xml'
 CompareXML has a variety of options that can be invoked as an optional argument, e.g.:
 
 ```ruby
-CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true, ...})
+CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
 ```
 
 - `collapse_whitespace: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#collapse_whitespace)
@@ -288,36 +288,36 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true, .
 
     ```ruby
     [
-        {
-            node1: '<title>TITLE</title>',
-            node2: '<title>ANOTHER TITLE</title>',
-            diff1: 'TITLE',
-            diff2: 'ANOTHER TITLE',
-        },
-        {
-            node1: '<h1>SOME HEADING</h1>',
-            node2: '<h1 id="main">SOME HEADING</h1>',
-            diff1: nil,
-            diff2: 'id="main"',
-        },
-        {
-            node1: '<a href="/admin" rel="icon">Link</a>',
-            node2: '<a rel="button" href="/admin">Link</a>',
-            diff1: '"rel="icon"',
-            diff2: '"rel="button"',
-        },
-        {
-            node1: '<cite>Author Name</cite>',
-            node2: nil,
-            diff1: '<cite>Author Name</cite>',
-            diff2: nil,
-        },
-        {
-            node1: '<p class="footer">FOOTER</p>',
-            node2: '<div class="footer">FOOTER</div>',
-            diff1: 'p',
-            diff2: 'div',
-        }
+      {
+        node1: '<title>TITLE</title>',
+        node2: '<title>ANOTHER TITLE</title>',
+        diff1: 'TITLE',
+        diff2: 'ANOTHER TITLE'
+      },
+      {
+        node1: '<h1>SOME HEADING</h1>',
+        node2: '<h1 id="main">SOME HEADING</h1>',
+        diff1: nil,
+        diff2: 'id="main"'
+      },
+      {
+        node1: '<a href="/admin" rel="icon">Link</a>',
+        node2: '<a rel="button" href="/admin">Link</a>',
+        diff1: '"rel="icon"',
+        diff2: '"rel="button"'
+      },
+      {
+        node1: '<cite>Author Name</cite>',
+        node2: nil,
+        diff1: '<cite>Author Name</cite>',
+        diff2: nil
+      },
+      {
+        node1: '<p class="footer">FOOTER</p>',
+        node2: '<div class="footer">FOOTER</div>',
+        diff1: 'p',
+        diff2: 'div'
+      }
     ]
     ```
 
