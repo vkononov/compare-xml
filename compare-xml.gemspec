@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description   = 'CompareXML is a fast, lightweight and feature-rich tool that will solve your XML/HTML comparison or diffing needs. its purpose is to compare two instances of Nokogiri::XML::Node or Nokogiri::XML::NodeSet for equality or equivalency.'
   spec.homepage      = 'https://github.com/vkononov/compare-xml'
   spec.license       = 'MIT'
-  spec.required_ruby_version = Gem::Requirement.new('>= 2.0.0')
+  spec.required_ruby_version = Gem::Requirement.new('>= 2.4.0')
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
     `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(example|test|spec|features)/}) }
