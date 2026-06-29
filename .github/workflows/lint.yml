@@ -1,0 +1,24 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: RuboCop & ESLint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 'ruby'
+          bundler-cache: true
+
+      - name: Run linters
+        run: bin/lint --no-fix
