@@ -77,3 +77,8 @@ Style/HashSyntax:
 
 Style/MutableConstant:
   Enabled: false
+
+# A keyword argument would break the public API on Ruby < 3.0, where a
+# trailing options hash gets absorbed into keywords.
+Style/OptionalBooleanParameter:
+  Enabled: false

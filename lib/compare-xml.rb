@@ -77,7 +77,7 @@ module CompareXML
     #
     #   @return true if equal, [Array] differences otherwise
     #
-    def equivalent?(n1, n2, opts = {}, child_opts = {}, diff_children: false)
+    def equivalent?(n1, n2, opts = {}, child_opts = {}, diff_children = false)
       opts = DEFAULTS_OPTS.merge(opts)
       child_opts = DEFAULTS_OPTS.merge(child_opts)
       differences = []

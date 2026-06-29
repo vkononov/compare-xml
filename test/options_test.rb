@@ -102,6 +102,6 @@ class OptionsTest < Minitest::Test
     b = doc('<html><body><p>Goodbye</p></body></html>')
 
     refute CompareXML.equivalent?(a, b)
-    assert CompareXML.equivalent?(a, b, {}, { ignore_text_nodes: true }, diff_children: true)
+    assert CompareXML.equivalent?(a, b, {}, { ignore_text_nodes: true }, true)
   end
 end
