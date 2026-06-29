@@ -1,17 +1,42 @@
+plugins:
+  - rubocop-md
+  - rubocop-minitest
+  - rubocop-performance
+  - rubocop-rake
+
 AllCops:
-#  Exclude:
-#    - config/routes.rb
-#    - db/migrate/*
-#    - db/schema.rb
-  TargetRubyVersion: 2.5
+  NewCops: enable
+  Exclude:
+    - .git/**/*
+    - vendor/bundle/**/*
+
+Gemspec/RequiredRubyVersion:
+  Enabled: false
+
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+
+Layout/IndentationConsistency:
+  Exclude:
+    - README.md
+
+Layout/InitialIndentation:
+  Exclude:
+    - README.md
+
+Layout/LineLength:
+  Enabled: false
+
+Layout/SpaceInsideHashLiteralBraces:
+  Enabled: false
 
 Metrics/AbcSize:
   Enabled: false
 
-Metrics/CyclomaticComplexity:
+Metrics/ClassLength:
   Enabled: false
 
-Metrics/LineLength:
+Metrics/CyclomaticComplexity:
   Enabled: false
 
 Metrics/MethodLength:
@@ -26,13 +51,16 @@ Metrics/ParameterLists:
 Metrics/PerceivedComplexity:
   Enabled: false
 
+Lint/DuplicateBranch:
+  Enabled: false
+
+Naming/AccessorMethodName:
+  Enabled: false
+
 Naming/FileName:
   Enabled: false
 
-Naming/MethodName:
-  Enabled: false
-
-Naming/UncommunicativeMethodParamName:
+Naming/MethodParameterName:
   Enabled: false
 
 Style/Documentation:
@@ -41,5 +69,16 @@ Style/Documentation:
 Style/FrozenStringLiteralComment:
   Enabled: false
 
-Style/Semicolon:
+Style/GuardClause:
+  Enabled: false
+
+Style/HashSyntax:
+  Enabled: false
+
+Style/MutableConstant:
+  Enabled: false
+
+# A keyword argument would break the public API on Ruby < 3.0, where a
+# trailing options hash gets absorbed into keywords.
+Style/OptionalBooleanParameter:
   Enabled: false
