@@ -195,7 +195,7 @@ module CompareXML
     #
     def compareChildren(n1_set, n2_set, opts, differences, diffchildren = false, status = EQUIVALENT)
       i = 0; j = 0
-      return if opts[:ignore_children]
+      return status if opts[:ignore_children]
       while i < n1_set.length || j < n2_set.length
         if !n1_set[i].nil? && nodeExcluded?(n1_set[i], opts)
           i += 1 # increment counter if left node is excluded
@@ -215,8 +215,8 @@ module CompareXML
           # increment both counters when both nodes have been compared
           i += 1; j += 1
         end
-        status
       end
+      status
     end
 
     ##
