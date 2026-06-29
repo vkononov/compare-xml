@@ -1,6 +1,9 @@
 # CompareXML
 
-[![Gem Version](https://badge.fury.io/rb/compare-xml.svg)](https://rubygems.org/gems/compare-xml)
+[![Gem Version](https://img.shields.io/gem/v/compare-xml.svg)](https://rubygems.org/gems/compare-xml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Lint Status](https://github.com/vkononov/compare-xml/actions/workflows/lint.yml/badge.svg)](https://github.com/vkononov/compare-xml/actions/workflows/lint.yml)
+[![Test Status](https://github.com/vkononov/compare-xml/actions/workflows/test.yml/badge.svg)](https://github.com/vkononov/compare-xml/actions/workflows/test.yml)
 
 CompareXML is a fast, lightweight and feature-rich tool that will solve your XML/HTML comparison or diffing needs. its purpose is to compare two instances of `Nokogiri::XML::Node` or `Nokogiri::XML::NodeSet` for equality or equivalency.
 
