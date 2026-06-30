@@ -348,6 +348,7 @@ module CompareXML
       if n1.name == n2.name
         result = compare_attribute_sets(n1, n2, n1.attribute_nodes, n2.attribute_nodes, opts, differences)
         return result unless result == EQUIVALENT || opts[:force_children] == true
+        status = result unless result == EQUIVALENT
         result = diff_children ? compare_children(n1.children, n2.children, child_opts, differences, diff_children: diff_children) : compare_children(n1.children, n2.children, opts, differences)
         status = result unless result == EQUIVALENT
       else
