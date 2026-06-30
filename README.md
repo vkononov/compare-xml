@@ -215,6 +215,11 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
         <a href="/admin" class="button" target="_blank">Link</a>
         <a href="/admin" class="button" target="_self" rel="nofollow">Link</a>
 
+    An ignored attribute does not need to be present on both elements. With `ignore_attrs_by_name: ['class']` the following HTML strings are considered equal:
+
+        <div class="foo"></div>
+        <div></div>
+
 ----------
 
 

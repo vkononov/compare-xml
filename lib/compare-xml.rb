@@ -396,6 +396,8 @@ module CompareXML
     #   @return type of equivalence (from equivalence constants)
     #
     def compare_attribute_sets(n1, n2, a1_set, a2_set, opts, differences)
+      a1_set = a1_set.reject { |a| attribute_excluded?(a, opts) }
+      a2_set = a2_set.reject { |a| attribute_excluded?(a, opts) }
       return false unless a1_set.length == a2_set.length || opts[:verbose]
       if opts[:ignore_attr_order]
         compare_sorted_attribute_sets(n1, n2, a1_set, a2_set, opts, differences)
@@ -496,9 +498,6 @@ module CompareXML
         status = MISSING_ATTRIBUTE
         add_difference(n1, n2, "#{a1.name}=\"#{a1.value}\"", nil, opts, differences)
       elsif a1.name == a2.name
-        return status if attr_name_excluded?(a1.name, a2.name, opts)
-        return status if attrs_excluded?(a1, a2, opts)
-        return status if attr_content_excluded?(a1, a2, opts)
         if a1.value != a2.value
           status = UNEQUAL_ATTRIBUTES
           add_difference(n1, n2, "#{a1.name}=\"#{a1.value}\"", "#{a2.name}=\"#{a2.value}\"", opts, differences)
@@ -533,66 +532,21 @@ module CompareXML
     end
 
     ##
-    # Checks whether two given attributes should be excluded, based on a user-specified css rule.
-    # If true, only the specified attributes are ignored; all remaining attributes are still compared.
-    # The CSS rule is used to locate the node that contains the attributes to be excluded.
-    # The CSS rule MUST contain the name of the attribute to be ignored.
+    # Determines whether a single attribute should be excluded from comparison, based on
+    # the +ignore_attrs_by_name+, +ignore_attr_content+ and +ignore_attrs+ options. The
+    # check is one-sided, so an attribute is dropped even when its counterpart is missing
+    # on the other element.
     #
-    #   @param [Nokogiri::XML::Attr] a1 left attribute
-    #   @param [Nokogiri::XML::Attr] a2 right attribute
+    #   @param [Nokogiri::XML::Attr] attr the attribute being tested
     #   @param [Hash] opts user-overridden options
     #
     #   @return true if excluded, false otherwise
     #
-    def attrs_excluded?(a1, a2, opts)
-      opts[:ignore_attrs].each do |css|
-        return true if css.include?(a1.name) && css.include?(a2.name) && a1.parent.xpath('../*').css(css).include?(a1.parent) && a2.parent.xpath('../*').css(css).include?(a2.parent)
-      end
-      false
-    end
+    def attribute_excluded?(attr, opts)
+      return true if opts[:ignore_attrs_by_name].any? { |name| attr.name.include?(name) }
+      return true if opts[:ignore_attr_content].any? { |content| attr.value.include?(content) }
 
-    ##
-    # Checks whether two given attributes should be excluded, based on their content.
-    # Checks whether both attributes contain content that should be excluded, and
-    # returns true only if an excluded string is contained in both attribute values.
-    #
-    #   @param [Nokogiri::XML::Attr] a1 left attribute
-    #   @param [Nokogiri::XML::Attr] a2 right attribute
-    #   @param [Hash] opts user-overridden options
-    #
-    #   @return true if excluded, false otherwise
-    #
-    def attr_content_excluded?(a1, a2, opts)
-      a1_excluded = false
-      a2_excluded = false
-      opts[:ignore_attr_content].each do |content|
-        a1_excluded ||= a1.value.include?(content)
-        a2_excluded ||= a2.value.include?(content)
-        return true if a1_excluded && a2_excluded
-      end
-      false
-    end
-
-    ##
-    # Checks whether two given attributes should be excluded, based on their content.
-    # Checks whether both attributes contain content that should be excluded, and
-    # returns true only if an excluded string is contained in both attribute values.
-    #
-    #   @param [Nokogiri::XML::Attr] a1 left attribute
-    #   @param [Nokogiri::XML::Attr] a2 right attribute
-    #   @param [Hash] opts user-overridden options
-    #
-    #   @return true if excluded, false otherwise
-    #
-    def attr_name_excluded?(a1, a2, opts)
-      a1_excluded = false
-      a2_excluded = false
-      opts[:ignore_attrs_by_name].each do |name|
-        a1_excluded ||= a1.to_s.include?(name)
-        a2_excluded ||= a2.to_s.include?(name)
-        return true if a1_excluded && a2_excluded
-      end
-      false
+      opts[:ignore_attrs].any? { |css| css.include?(attr.name) && attr.parent.xpath('../*').css(css).include?(attr.parent) }
     end
 
     ##
