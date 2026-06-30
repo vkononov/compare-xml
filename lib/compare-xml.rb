@@ -538,13 +538,16 @@ module CompareXML
     # check is one-sided, so an attribute is dropped even when its counterpart is missing
     # on the other element.
     #
+    # Name matchers are compared with +===+: a String matches the attribute name exactly,
+    # while a Regexp matches it as a pattern.
+    #
     #   @param [Nokogiri::XML::Attr] attr the attribute being tested
     #   @param [Hash] opts user-overridden options
     #
     #   @return true if excluded, false otherwise
     #
     def attribute_excluded?(attr, opts)
-      return true if opts[:ignore_attrs_by_name].any? { |name| attr.name.include?(name) }
+      return true if opts[:ignore_attrs_by_name].any? { |matcher| matcher === attr.name }
       return true if opts[:ignore_attr_content].any? { |content| attr.value.include?(content) }
 
       opts[:ignore_attrs].any? { |css| css.include?(attr.name) && attr.parent.xpath('../*').css(css).include?(attr.parent) }

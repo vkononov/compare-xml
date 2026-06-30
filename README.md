@@ -83,8 +83,8 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
 - `ignore_attrs: [css_selector1, css_selector1, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_attrs)
     - when provided, ignores specific *attributes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
 
-- `ignore_attrs_by_name: [string1, string2, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_attrs_by_name)
-    - when provided, ignores specific *attributes* using [String]
+- `ignore_attrs_by_name: [matcher1, matcher2, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_attrs_by_name)
+    - when provided, ignores *attributes* whose name matches a `String` (exact) or `Regexp` (pattern)
 
 - `ignore_comments: {true|false}` default: **`true`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_comments)
     - when `true`, ignores comments, such as `<!-- comment -->`
@@ -204,16 +204,21 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
 
 ----------
 
-- <a id="ignore_attrs_by_name"></a>`ignore_attrs_by_name: [string1, string2, ...]` default: **`false`**
+- <a id="ignore_attrs_by_name"></a>`ignore_attrs_by_name: [matcher1, matcher2, ...]` default: **`[]`**
 
-    When provided, ignores all **attributes** which name is specified in the string array.
+    When provided, ignores all **attributes** whose name matches one of the given matchers. A `String` matches the attribute name exactly, while a `Regexp` matches it as a pattern.
 
-     **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {ignore_attrs_by_name: ['target'])`
+     **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {ignore_attrs_by_name: ['target', /^data-/]})`
 
     **Example:** With `ignore_attrs_by_name: ['target', 'rel']` the following HTML strings are considered equal:
 
         <a href="/admin" class="button" target="_blank">Link</a>
         <a href="/admin" class="button" target="_self" rel="nofollow">Link</a>
+
+    **Example:** With `ignore_attrs_by_name: [/^data-/]` the following HTML strings are considered equal:
+
+        <div data-id="1" data-role="row">Link</div>
+        <div data-id="2" data-role="cell">Link</div>
 
     An ignored attribute does not need to be present on both elements. With `ignore_attrs_by_name: ['class']` the following HTML strings are considered equal:
 

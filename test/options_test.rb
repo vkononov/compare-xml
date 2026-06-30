@@ -58,6 +58,22 @@ class OptionsTest < Minitest::Test
     assert CompareXML.equivalent?(a, b, { ignore_attrs_by_name: ['class'] })
   end
 
+  def test_ignore_attrs_by_name_matches_strings_exactly
+    a = frag('<div data-id="1"></div>')
+    b = frag('<div data-id="2"></div>')
+
+    refute CompareXML.equivalent?(a, b, { ignore_attrs_by_name: ['id'] })
+    assert CompareXML.equivalent?(a, b, { ignore_attrs_by_name: ['data-id'] })
+  end
+
+  def test_ignore_attrs_by_name_matches_regexps_as_patterns
+    a = frag('<div data-id="1" data-role="row"></div>')
+    b = frag('<div data-id="2" data-role="cell"></div>')
+
+    refute CompareXML.equivalent?(a, b)
+    assert CompareXML.equivalent?(a, b, { ignore_attrs_by_name: [/^data-/] })
+  end
+
   def test_ignore_attrs_by_css_when_attribute_missing_on_one_side
     a = frag('<div><a href="/admin" target="_blank">L</a></div>')
     b = frag('<div><a href="/admin">L</a></div>')

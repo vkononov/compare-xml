@@ -82,3 +82,8 @@ Style/MutableConstant:
 # trailing options hash gets absorbed into keywords.
 Style/OptionalBooleanParameter:
   Enabled: false
+
+# Attribute-name matchers are intentionally compared with === so that a
+# String matches exactly while a Regexp matches as a pattern.
+Style/CaseEquality:
+  Enabled: false
