@@ -104,6 +104,9 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
 - `force_children {true|false}` default **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#force_children)
     - when `true`, the subnodes of a node are checked independently of the status of the parent node
 
+- `align_children {true|false}` default **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#align_children)
+    - when `true` (in `verbose` mode), aligns child nodes so insertions and removals are reported as additions/removals instead of changes
+
 
 ## Options in Depth
 
@@ -351,6 +354,21 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
     When provided, compares all **subnodes** of any node.
 
     **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {force_children: true})`
+
+----------
+
+- <a id="align_children"></a>`align_children: {true|false}` default: **`false`**
+
+    Only takes effect in `verbose` mode. When `true`, sibling nodes are aligned before comparison so that an inserted or removed node is reported as an addition or removal (with one side `nil`) rather than causing the remaining siblings to be reported as a series of changes. Identical subtrees are matched as anchors, and the unmatched nodes between them are compared in order.
+
+    **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {verbose: true, align_children: true})`
+
+    **Example:** Given a left document with three children and a right document with only the third:
+
+        <properties><a/><b/><c/></properties>
+        <properties><c/></properties>
+
+    With `align_children: true`, `<a>` and `<b>` are reported as removals (`node2` is `nil`); without it, they collapse into a single positional change.
 
 ----------
 
