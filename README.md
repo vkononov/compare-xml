@@ -5,7 +5,7 @@
 [![Lint Status](https://github.com/vkononov/compare-xml/actions/workflows/lint.yml/badge.svg)](https://github.com/vkononov/compare-xml/actions/workflows/lint.yml)
 [![Test Status](https://github.com/vkononov/compare-xml/actions/workflows/test.yml/badge.svg)](https://github.com/vkononov/compare-xml/actions/workflows/test.yml)
 
-CompareXML is a fast, lightweight and feature-rich tool that will solve your XML/HTML comparison or diffing needs. its purpose is to compare two instances of `Nokogiri::XML::Node` or `Nokogiri::XML::NodeSet` for equality or equivalency.
+CompareXML is a fast, lightweight and feature-rich tool that will solve your XML/HTML comparison or diffing needs. Its purpose is to compare two instances of `Nokogiri::XML::Node` or `Nokogiri::XML::NodeSet` for equality or equivalency.
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/vkononov)
 
@@ -298,7 +298,7 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
 
     **Example:** When `true` given the following HTML strings:
 
-    ![diffing](https://github.com/vkononov/compare-xml/raw/master/img/diffing.png)
+    ![diffing](https://github.com/vkononov/compare-xml/raw/main/img/diffing.png)
 
     `CompareXML.equivalent?(doc1, doc2, {verbose: true})` will produce an array shown below.
 
