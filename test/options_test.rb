@@ -43,6 +43,30 @@ class OptionsTest < Minitest::Test
     assert CompareXML.equivalent?(a, b, { ignore_attrs_by_name: ['target'] })
   end
 
+  def test_ignore_attrs_by_name_when_attribute_missing_on_one_side
+    a = frag('<div class="foo"></div>')
+    b = frag('<div></div>')
+
+    refute CompareXML.equivalent?(a, b)
+    assert CompareXML.equivalent?(a, b, { ignore_attrs_by_name: ['class'] })
+  end
+
+  def test_ignore_attrs_by_css_when_attribute_missing_on_one_side
+    a = frag('<div><a href="/admin" target="_blank">L</a></div>')
+    b = frag('<div><a href="/admin">L</a></div>')
+
+    refute CompareXML.equivalent?(a, b)
+    assert CompareXML.equivalent?(a, b, { ignore_attrs: ['a[target]'] })
+  end
+
+  def test_ignore_attr_content_when_attribute_present_on_one_side_only
+    a = frag('<a id="button_1">L</a>')
+    b = frag('<a>L</a>')
+
+    refute CompareXML.equivalent?(a, b)
+    assert CompareXML.equivalent?(a, b, { ignore_attr_content: ['button'] })
+  end
+
   def test_ignore_comments
     a = frag('<div><!-- one -->Link</div>')
     b = frag('<div><!-- two -->Link</div>')
