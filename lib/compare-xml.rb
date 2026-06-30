@@ -472,7 +472,7 @@ module CompareXML
       [a1_set.length, a2_set.length].max.times do |i|
         result = compare_attributes(n1, n2, a1_set[i], a2_set[i], opts, differences)
         status = result unless result == EQUIVALENT
-        break unless status == EQUIVALENT
+        break unless status == EQUIVALENT || opts[:verbose]
       end
       status
     end

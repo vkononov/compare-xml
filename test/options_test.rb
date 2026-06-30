@@ -19,6 +19,13 @@ class OptionsTest < Minitest::Test
     refute CompareXML.equivalent?(a, b, { ignore_attr_order: false })
   end
 
+  def test_unsorted_attribute_comparison_reports_all_differences_in_verbose
+    a = frag('<a x="1" y="1">L</a>')
+    b = frag('<a x="2" y="2">L</a>')
+
+    assert_equal 2, CompareXML.equivalent?(a, b, { ignore_attr_order: false, verbose: true }).length
+  end
+
   def test_ignore_attr_content
     a = frag('<a href="/admin" id="button_1" class="blue button">L</a>')
     b = frag('<a href="/admin" id="button_2" class="info button">L</a>')
