@@ -14,7 +14,7 @@ RUBOCOP_CONFIG=.rubocop.yml
 test -e ${RUBOCOP_CONFIG} || { echo -e "${ERROR_COLOR}"ERROR: ${RUBOCOP_CONFIG} not found."${RESET_COLOR}"; exit 1; }
 
 # Running linters
-echo -e "${HIGHLIGHT_COLOR}"Linting Ruby on Rails using RuboCop..."${RESET_COLOR}"
+echo -e "${HIGHLIGHT_COLOR}"Linting Ruby using RuboCop..."${RESET_COLOR}"
 if [[ "$1" == "--no-fix" ]]; then
         bundle exec rubocop || { valid=false; }
 else
