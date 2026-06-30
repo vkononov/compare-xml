@@ -147,7 +147,7 @@ module CompareXML
     #   @return type of equivalence (from equivalence constants)
     #
     def compare_comment_nodes(n1, n2, opts, differences, status: EQUIVALENT)
-      return true if opts[:ignore_comments]
+      return status if opts[:ignore_comments]
       t1 = n1.content
       t2 = n2.content
       if opts[:collapse_whitespace]
@@ -369,7 +369,7 @@ module CompareXML
     #   @return type of equivalence (from equivalence constants)
     #
     def compare_text_nodes(n1, n2, opts, differences, status = EQUIVALENT)
-      return true if opts[:ignore_text_nodes]
+      return status if opts[:ignore_text_nodes]
       t1 = n1.content
       t2 = n2.content
       if opts[:collapse_whitespace]

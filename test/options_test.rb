@@ -75,6 +75,14 @@ class OptionsTest < Minitest::Test
     refute CompareXML.equivalent?(a, b, { ignore_comments: false })
   end
 
+  def test_ignored_bare_comment_nodes_agree_in_boolean_and_verbose_modes
+    a = frag('<!-- one -->').children.first
+    b = frag('<!-- two -->').children.first
+
+    assert CompareXML.equivalent?(a, b)
+    assert_empty CompareXML.equivalent?(a, b, { verbose: true })
+  end
+
   def test_ignore_nodes_by_css
     a = frag('<div><a href="/admin" target="_blank">L1</a></div>')
     b = frag('<div><a href="/index" target="_self">L2</a></div>')
@@ -89,6 +97,14 @@ class OptionsTest < Minitest::Test
 
     refute CompareXML.equivalent?(a, b)
     assert CompareXML.equivalent?(a, b, { ignore_text_nodes: true })
+  end
+
+  def test_ignored_bare_text_nodes_agree_in_boolean_and_verbose_modes
+    a = frag('hello').children.first
+    b = frag('world').children.first
+
+    assert CompareXML.equivalent?(a, b, { ignore_text_nodes: true })
+    assert_empty CompareXML.equivalent?(a, b, { ignore_text_nodes: true, verbose: true })
   end
 
   def test_verbose_difference_structure
