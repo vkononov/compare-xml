@@ -16,6 +16,10 @@ module CompareXML
     # when false, children of elements are not compared if the root is different
     force_children: false,
 
+    # when true (verbose mode only), child nodes are aligned before being compared so that
+    # inserted or removed nodes are reported as additions/removals instead of as changes
+    align_children: false,
+
     # when true, children of elements are never compared
     # when false, children of elements are compared if root is different or see force_children
     ignore_children: false,
@@ -192,9 +196,10 @@ module CompareXML
     #   @return type of equivalence (from equivalence constants)
     #
     def compare_children(n1_set, n2_set, opts, differences, diff_children: false, status: EQUIVALENT)
+      return status if opts[:ignore_children]
+      return compare_aligned_children(n1_set, n2_set, opts, differences, diff_children: diff_children, status: status) if opts[:verbose] && opts[:align_children]
       i = 0
       j = 0
-      return status if opts[:ignore_children]
       while i < n1_set.length || j < n2_set.length
         if !n1_set[i].nil? && node_excluded?(n1_set[i], opts)
           i += 1 # increment counter if left node is excluded
@@ -217,6 +222,111 @@ module CompareXML
         end
       end
       status
+    end
+
+    ##
+    # Compares two sets of child nodes by first aligning them, so that inserted or
+    # removed nodes are reported as additions/removals rather than as changes.
+    # Identical subtrees are matched as anchors (via a longest common subsequence
+    # of their fingerprints); the unmatched nodes between anchors are compared
+    # positionally, and any leftovers become additions or removals.
+    #
+    def compare_aligned_children(n1_set, n2_set, opts, differences, diff_children: false, status: EQUIVALENT)
+      left = n1_set.reject { |n| node_excluded?(n, opts) }
+      right = n2_set.reject { |n| node_excluded?(n, opts) }
+      cache = {}.compare_by_identity
+      fingerprints_left = left.map { |n| node_fingerprint(n, opts, cache) }
+      fingerprints_right = right.map { |n| node_fingerprint(n, opts, cache) }
+
+      prev_i = 0
+      prev_j = 0
+      anchors = longest_common_subsequence(fingerprints_left, fingerprints_right)
+      (anchors + [[left.length, right.length]]).each do |anchor_i, anchor_j|
+        result = compare_child_gap(left[prev_i...anchor_i], right[prev_j...anchor_j], opts, differences, diff_children)
+        status = result unless result == EQUIVALENT
+        prev_i = anchor_i + 1
+        prev_j = anchor_j + 1
+      end
+      status
+    end
+
+    ##
+    # Compares a run of unmatched left and right nodes that lies between two anchors.
+    # Overlapping nodes are compared positionally; remaining left nodes are reported
+    # as removals and remaining right nodes as additions.
+    #
+    def compare_child_gap(left, right, opts, differences, diff_children, status: EQUIVALENT)
+      common = [left.length, right.length].min
+      common.times do |k|
+        result = diff_children ? compare_nodes(left[k], right[k], opts, differences, opts, diff_children: diff_children) : compare_nodes(left[k], right[k], opts, differences)
+        status = result unless result == EQUIVALENT
+      end
+      left.drop(common).each do |n|
+        status = MISSING_NODE
+        add_difference(n, nil, n, nil, opts, differences)
+      end
+      right.drop(common).each do |n|
+        status = MISSING_NODE
+        add_difference(nil, n, nil, n, opts, differences)
+      end
+      status
+    end
+
+    ##
+    # Builds a canonical, option-aware string for a node so that two nodes with equal
+    # fingerprints are guaranteed to be equivalent under the current options. Used to
+    # anchor identical subtrees during alignment. Results are memoized per comparison.
+    #
+    def node_fingerprint(node, opts, cache)
+      cache[node] ||= build_node_fingerprint(node, opts, cache)
+    end
+
+    def build_node_fingerprint(node, opts, cache)
+      case node
+      when Nokogiri::XML::Comment
+        "C:#{opts[:collapse_whitespace] ? collapse(node.content) : node.content}"
+      when Nokogiri::XML::Text
+        "T:#{opts[:collapse_whitespace] ? collapse(node.content) : node.content}"
+      when Nokogiri::XML::Element
+        attrs = node.attribute_nodes
+        attrs = attrs.sort_by(&:name) if opts[:ignore_attr_order]
+        attr_str = attrs.map { |a| "#{a.name}=#{a.value}" }.join(' ')
+        children = node.children.reject { |c| node_excluded?(c, opts) }
+        child_str = children.map { |c| node_fingerprint(c, opts, cache) }.join
+        "E:#{node.name}[#{attr_str}](#{child_str})"
+      else
+        "O:#{node.class}:#{node}"
+      end
+    end
+
+    ##
+    # Returns the index pairs of a longest common subsequence of the two arrays.
+    #
+    def longest_common_subsequence(a, b)
+      m = a.length
+      n = b.length
+      lengths = Array.new(m + 1) { Array.new(n + 1, 0) }
+      (m - 1).downto(0) do |i|
+        (n - 1).downto(0) do |j|
+          lengths[i][j] = a[i] == b[j] ? lengths[i + 1][j + 1] + 1 : [lengths[i + 1][j], lengths[i][j + 1]].max
+        end
+      end
+
+      pairs = []
+      i = 0
+      j = 0
+      while i < m && j < n
+        if a[i] == b[j]
+          pairs << [i, j]
+          i += 1
+          j += 1
+        elsif lengths[i + 1][j] >= lengths[i][j + 1]
+          i += 1
+        else
+          j += 1
+        end
+      end
+      pairs
     end
 
     ##
