@@ -129,6 +129,14 @@ class OptionsTest < Minitest::Test
     assert_equal 2, CompareXML.equivalent?(a, b, { verbose: true, force_children: true }).length
   end
 
+  def test_force_children_still_reports_attribute_difference_when_children_match
+    a = frag('<div class="a"><p>X</p></div>')
+    b = frag('<div class="b"><p>X</p></div>')
+
+    refute CompareXML.equivalent?(a, b, { force_children: true })
+    assert CompareXML.equivalent?(a, frag('<div class="a"><p>X</p></div>'), { force_children: true })
+  end
+
   def test_ignore_children
     a = frag('<div><a href="/a">L1</a></div>')
     b = frag('<div><a href="/b">L2</a></div>')
