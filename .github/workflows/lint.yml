@@ -22,3 +22,15 @@ jobs:
 
       - name: Run linters
         run: bin/lint --no-fix
+
+  # Single stable status check that summarises the job above, so branch
+  # protection can require one name ("Lint") that survives job changes.
+  lint-result:
+    name: Lint
+    if: always()
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any lint job did not succeed
+        if: needs.lint.result != 'success'
+        run: exit 1
