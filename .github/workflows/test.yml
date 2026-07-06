@@ -30,3 +30,15 @@ jobs:
         run: bundle install
       - name: Run tests
         run: bundle exec rake test
+
+  # Single stable status check that summarises the whole matrix above, so
+  # branch protection can require one name ("Test") instead of every cell.
+  test-result:
+    name: Test
+    if: always()
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any matrix job did not succeed
+        if: needs.test.result != 'success'
+        run: exit 1
