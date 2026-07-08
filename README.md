@@ -1,11 +1,14 @@
 # CompareXML
 
-[![Gem Version](https://img.shields.io/gem/v/compare-xml.svg)](https://rubygems.org/gems/compare-xml)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Lint Status](https://github.com/vkononov/compare-xml/actions/workflows/lint.yml/badge.svg)](https://github.com/vkononov/compare-xml/actions/workflows/lint.yml)
-[![Test Status](https://github.com/vkononov/compare-xml/actions/workflows/test.yml/badge.svg)](https://github.com/vkononov/compare-xml/actions/workflows/test.yml)
+[![Gem Version](https://img.shields.io/gem/v/compare-xml.svg?label=Gem&logo=rubygems&logoColor=white)](https://rubygems.org/gems/compare-xml)
+[![Ruby](https://img.shields.io/badge/Ruby-2.4%20to%204.0-CC342D?logo=ruby&logoColor=white)](https://github.com/vkononov/compare-xml/blob/main/.github/workflows/test.yml)
+[![Test Matrix](https://img.shields.io/github/actions/workflow/status/vkononov/compare-xml/test.yml?branch=main&label=Test%20Matrix&logo=github)](https://github.com/vkononov/compare-xml/actions/workflows/test.yml)
+[![Lint](https://img.shields.io/github/actions/workflow/status/vkononov/compare-xml/lint.yml?branch=main&label=Lint&logo=github)](https://github.com/vkononov/compare-xml/actions/workflows/lint.yml)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 CompareXML is a fast, lightweight and feature-rich tool that will solve your XML/HTML comparison or diffing needs. Its purpose is to compare two instances of `Nokogiri::XML::Node` or `Nokogiri::XML::NodeSet` for equality or equivalency.
+
+Supports **Ruby 2.4 → latest**, with the full Ruby matrix tested daily in CI.
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/vkononov)
 
