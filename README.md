@@ -4,7 +4,7 @@
 [![Ruby](https://img.shields.io/badge/Ruby-2.4%20to%204.0-CC342D?logo=ruby&logoColor=white)](https://github.com/vkononov/compare-xml/blob/main/.github/workflows/test.yml)
 [![Test Matrix](https://img.shields.io/github/actions/workflow/status/vkononov/compare-xml/test.yml?branch=main&label=Test%20Matrix&logo=github)](https://github.com/vkononov/compare-xml/actions/workflows/test.yml)
 [![Lint](https://img.shields.io/github/actions/workflow/status/vkononov/compare-xml/lint.yml?branch=main&label=Lint&logo=github)](https://github.com/vkononov/compare-xml/actions/workflows/lint.yml)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/MIT)
 
 CompareXML is a fast, lightweight and feature-rich tool that will solve your XML/HTML comparison or diffing needs. Its purpose is to compare two instances of `Nokogiri::XML::Node` or `Nokogiri::XML::NodeSet` for equality or equivalency.
 
@@ -52,8 +52,8 @@ where `doc1` and `doc2` are instances of `Nokogiri::XML::Node` or `Nokogiri::XML
 Suppose you have two files `1.html` and `2.html` that you would like to compare. You could do it as follows:
 
 ```ruby
-doc1 = Nokogiri::HTML(open('1.html'))
-doc2 = Nokogiri::HTML(open('2.html'))
+doc1 = Nokogiri::HTML(File.read('1.html'))
+doc2 = Nokogiri::HTML(File.read('2.html'))
 puts CompareXML.equivalent?(doc1, doc2)
 ```
 
@@ -84,7 +84,7 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
     - when provided, ignores all attributes that contain substrings `string`, `string2`, etc.
 
 - `ignore_attrs: [css_selector1, css_selector1, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_attrs)
-    - when provided, ignores specific *attributes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
+    - when provided, ignores specific *attributes* using [CSS selectors](https://www.w3schools.com/cssref/css_selectors.php)
 
 - `ignore_attrs_by_name: [matcher1, matcher2, ...]` default: **`[]`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_attrs_by_name)
     - when provided, ignores *attributes* whose name matches a `String` (exact) or `Regexp` (pattern)
@@ -93,7 +93,7 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
     - when `true`, ignores comments, such as `<!-- comment -->`
 
 - `ignore_nodes: [css_selector1, css_selector1, ...]` default: **`[]`** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_nodes)
-    - when provided, ignores specific *nodes* using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp)
+    - when provided, ignores specific *nodes* using [CSS selectors](https://www.w3schools.com/cssref/css_selectors.php)
 
 - `ignore_text_nodes: {true|false}` default: **`false`**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[show examples ⇨](#ignore_text_nodes)
     - when `true`, ignores all text content within a document
@@ -191,7 +191,7 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
 
 - <a id="ignore_attrs"></a>`ignore_attrs: [css_selector1, css_selector1, ...]` default: **`[]`**
 
-    When provided, ignores all **attributes** that satisfy a particular rule using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp).
+    When provided, ignores all **attributes** that satisfy a particular rule using [CSS selectors](https://www.w3schools.com/cssref/css_selectors.php).
 
     **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {ignore_attrs: ['a[rel="nofollow"]', 'input[type="hidden"']})`
 
@@ -253,7 +253,7 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
 
 - <a id="ignore_nodes"></a>`ignore_nodes: [css_selector1, css_selector1, ...]` default: **`[]`**
 
-    When provided, ignores all **nodes** that satisfy a particular rule using [CSS selectors](http://www.w3schools.com/cssref/css_selectors.asp).
+    When provided, ignores all **nodes** that satisfy a particular rule using [CSS selectors](https://www.w3schools.com/cssref/css_selectors.php).
 
     **Usage Example:** `CompareXML.equivalent?(doc1, doc2, {ignore_nodes: ['script', 'object']})`
 
@@ -385,6 +385,31 @@ CompareXML.equivalent?(doc1, doc2, {collapse_whitespace: false, verbose: true})
 
 ----------
 
+## Separate Options for Child Nodes
+
+`CompareXML.equivalent?` accepts two further optional arguments that let child nodes be compared under a different set of options than the root:
+
+```ruby
+CompareXML.equivalent?(doc1, doc2, opts = {}, child_opts = {}, diff_children = false)
+```
+
+- `child_opts` - a second options hash, merged over the defaults the same way as `opts`, applied to child nodes
+- `diff_children` - when `true`, child nodes are compared using `child_opts` instead of `opts`
+
+`child_opts` is ignored unless `diff_children` is `true`.
+
+**Example:** compare the root strictly, but ignore text content within child nodes:
+
+```ruby
+doc1 = Nokogiri::HTML('<html><body><p>Hello</p></body></html>')
+doc2 = Nokogiri::HTML('<html><body><p>Goodbye</p></body></html>')
+
+CompareXML.equivalent?(doc1, doc2) # => false
+CompareXML.equivalent?(doc1, doc2, {}, { ignore_text_nodes: true }, true) # => true
+```
+
+----------
+
 ## Contributing
 
 1. Fork it
@@ -403,4 +428,4 @@ This gem was inspired by [Michael B. Klein](https://github.com/mbklein)'s gem [`
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
+The gem is available as open source under the terms of the [MIT License](https://opensource.org/license/MIT).
