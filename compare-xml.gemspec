@@ -6,8 +6,9 @@ Gem::Specification.new do |spec|
   spec.authors = ['Vadim Kononov']
   spec.email = ['vadim@konoson.com']
 
-  spec.summary = 'A customizable tool that compares two instances of Nokogiri::XML::Node for equality or equivalency.'
-  spec.description = 'CompareXML is a fast, lightweight and feature-rich tool that will solve your XML/HTML comparison or diffing needs. its purpose is to compare two instances of Nokogiri::XML::Node or Nokogiri::XML::NodeSet for equality or equivalency.'
+  spec.summary = 'Compare XML and HTML documents or Nokogiri nodes for equality with a diff'
+  spec.description = 'Compares Nokogiri XML and HTML documents, nodes and node sets for equality or equivalency. ' \
+                     'Returns a list of differences and can exclude chosen nodes or attributes.'
   spec.homepage = 'https://github.com/vkononov/compare-xml'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 2.4.0'
