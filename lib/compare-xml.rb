@@ -115,6 +115,8 @@ module CompareXML
           status = diff_children ? compare_element_nodes(n1, n2, opts, differences, child_opts, diff_children: diff_children) : compare_element_nodes(n1, n2, opts, differences)
         when Nokogiri::XML::Text
           status = compare_text_nodes(n1, n2, opts, differences)
+        when Nokogiri::XML::NodeSet
+          status = diff_children ? compare_children(n1, n2, child_opts, differences, diff_children: diff_children) : compare_children(n1, n2, opts, differences)
         else
           raise 'Comparison only allowed between objects of type Nokogiri::XML::Node and Nokogiri::XML::NodeSet.' unless n1.is_a?(Nokogiri::XML::Node) || n1.is_a?(Nokogiri::XML::NodeSet)
           status = compare_children(n1.children, n2.children, opts, differences)
@@ -293,7 +295,7 @@ module CompareXML
         attr_str = attrs.map { |a| "#{a.name}=#{a.value}" }.join(' ')
         children = node.children.reject { |c| node_excluded?(c, opts) }
         child_str = children.map { |c| node_fingerprint(c, opts, cache) }.join
-        "E:#{node.name}[#{attr_str}](#{child_str})"
+        "E:#{element_name(node)}[#{attr_str}](#{child_str})"
       else
         "O:#{node.class}:#{node}"
       end
@@ -345,7 +347,7 @@ module CompareXML
     #   @return type of equivalence (from equivalence constants)
     #
     def compare_element_nodes(n1, n2, opts, differences, child_opts = {}, diff_children: false, status: EQUIVALENT)
-      if n1.name == n2.name
+      if element_name(n1) == element_name(n2)
         result = compare_attribute_sets(n1, n2, n1.attribute_nodes, n2.attribute_nodes, opts, differences)
         return result unless result == EQUIVALENT || opts[:force_children] == true
         status = result unless result == EQUIVALENT
@@ -353,9 +355,22 @@ module CompareXML
         status = result unless result == EQUIVALENT
       else
         status = UNEQUAL_ELEMENTS
-        add_difference(n1, n2, n1.name, n2.name, opts, differences)
+        add_difference(n1, n2, element_name(n1), element_name(n2), opts, differences)
       end
       status
+    end
+
+    ##
+    # Returns the element name qualified by its namespace URI, so that elements with
+    # the same local name in different namespaces are not treated as equal.
+    #
+    #   @param [Nokogiri::XML::Element] node the element
+    #
+    #   @return [String] the local name, prefixed with "{uri}" when namespaced
+    #
+    def element_name(node)
+      href = node.namespace&.href
+      href ? "{#{href}}#{node.name}" : node.name
     end
 
     ##
