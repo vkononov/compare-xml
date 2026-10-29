@@ -10,8 +10,6 @@ CompareXML is a fast, lightweight and feature-rich tool that will solve your XML
 
 Supports **Ruby 2.4 → latest**, with the full Ruby matrix tested daily in CI.
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/vkononov)
-
 **Features**
 
  - Fast, light-weight and highly customizable
