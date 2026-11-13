@@ -107,6 +107,8 @@ module CompareXML
     def compare_nodes(n1, n2, opts, differences, child_opts = {}, diff_children: false)
       if n1.instance_of?(n2.class)
         case n1
+        when Nokogiri::XML::ProcessingInstruction
+          status = compare_processing_instructions(n1, n2, opts, differences)
         when Nokogiri::XML::Comment
           status = compare_comment_nodes(n1, n2, opts, differences)
         when Nokogiri::HTML::Document
@@ -135,6 +137,13 @@ module CompareXML
         end
       end
       status
+    end
+
+    def compare_processing_instructions(n1, n2, opts, differences)
+      return EQUIVALENT if n1.name == n2.name && n1.content == n2.content
+
+      add_difference(n1, n2, n1, n2, opts, differences)
+      UNEQUAL_ELEMENTS
     end
 
     ##
