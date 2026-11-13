@@ -275,7 +275,7 @@ module CompareXML
     end
 
     ##
-    # Builds a canonical, option-aware string for a node so that two nodes with equal
+    # Builds a structured, option-aware fingerprint for a node so that two nodes with equal
     # fingerprints are guaranteed to be equivalent under the current options. Used to
     # anchor identical subtrees during alignment. Results are memoized per comparison.
     #
@@ -285,19 +285,16 @@ module CompareXML
 
     def build_node_fingerprint(node, opts, cache)
       case node
-      when Nokogiri::XML::Comment
-        "C:#{opts[:collapse_whitespace] ? collapse(node.content) : node.content}"
-      when Nokogiri::XML::Text
-        "T:#{opts[:collapse_whitespace] ? collapse(node.content) : node.content}"
+      when Nokogiri::XML::Comment, Nokogiri::XML::Text
+        [node.class, opts[:collapse_whitespace] ? collapse(node.content) : node.content]
       when Nokogiri::XML::Element
-        attrs = node.attribute_nodes
+        attrs = node.attribute_nodes.reject { |attr| attribute_excluded?(attr, opts) }
         attrs = attrs.sort_by { |attr| attribute_name(attr) } if opts[:ignore_attr_order]
-        attr_str = attrs.map { |a| "#{attribute_name(a)}=#{a.value}" }.join(' ')
-        children = node.children.reject { |c| node_excluded?(c, opts) }
-        child_str = children.map { |c| node_fingerprint(c, opts, cache) }.join
-        "E:#{element_name(node)}[#{attr_str}](#{child_str})"
+        attributes = attrs.map { |attr| [attribute_name(attr), attr.value] }
+        children = opts[:ignore_children] ? [] : node.children.reject { |child| node_excluded?(child, opts) }
+        [node.class, element_name(node), attributes, children.map { |child| node_fingerprint(child, opts, cache) }]
       else
-        "O:#{node.class}:#{node}"
+        [node.class, node.to_s]
       end
     end
 
