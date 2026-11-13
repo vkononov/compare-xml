@@ -107,6 +107,8 @@ module CompareXML
     def compare_nodes(n1, n2, opts, differences, child_opts = {}, diff_children: false)
       if n1.instance_of?(n2.class)
         case n1
+        when Nokogiri::XML::ProcessingInstruction
+          status = compare_processing_instructions(n1, n2, opts, differences)
         when Nokogiri::XML::Comment
           status = compare_comment_nodes(n1, n2, opts, differences)
         when Nokogiri::HTML::Document
@@ -137,6 +139,13 @@ module CompareXML
       status
     end
 
+    def compare_processing_instructions(n1, n2, opts, differences)
+      return EQUIVALENT if n1.name == n2.name && n1.content == n2.content
+
+      add_difference(n1, n2, n1, n2, opts, differences)
+      UNEQUAL_ELEMENTS
+    end
+
     ##
     # Compares two nodes of type Nokogiri::HTML::Comment.
     #
@@ -148,6 +157,7 @@ module CompareXML
     #
     #   @return type of equivalence (from equivalence constants)
     #
+
     def compare_comment_nodes(n1, n2, opts, differences, status: EQUIVALENT)
       return status if opts[:ignore_comments]
       t1 = n1.content
@@ -275,7 +285,7 @@ module CompareXML
     end
 
     ##
-    # Builds a canonical, option-aware string for a node so that two nodes with equal
+    # Builds a structured, option-aware fingerprint for a node so that two nodes with equal
     # fingerprints are guaranteed to be equivalent under the current options. Used to
     # anchor identical subtrees during alignment. Results are memoized per comparison.
     #
@@ -285,19 +295,18 @@ module CompareXML
 
     def build_node_fingerprint(node, opts, cache)
       case node
-      when Nokogiri::XML::Comment
-        "C:#{opts[:collapse_whitespace] ? collapse(node.content) : node.content}"
-      when Nokogiri::XML::Text
-        "T:#{opts[:collapse_whitespace] ? collapse(node.content) : node.content}"
+      when Nokogiri::XML::ProcessingInstruction
+        [node.class, node.name, node.content]
+      when Nokogiri::XML::Comment, Nokogiri::XML::Text
+        [node.class, opts[:collapse_whitespace] ? collapse(node.content) : node.content]
       when Nokogiri::XML::Element
-        attrs = node.attribute_nodes
-        attrs = attrs.sort_by(&:name) if opts[:ignore_attr_order]
-        attr_str = attrs.map { |a| "#{a.name}=#{a.value}" }.join(' ')
-        children = node.children.reject { |c| node_excluded?(c, opts) }
-        child_str = children.map { |c| node_fingerprint(c, opts, cache) }.join
-        "E:#{element_name(node)}[#{attr_str}](#{child_str})"
+        attrs = node.attribute_nodes.reject { |attr| attribute_excluded?(attr, opts) }
+        attrs = attrs.sort_by { |attr| attribute_name(attr) } if opts[:ignore_attr_order]
+        attributes = attrs.map { |attr| [attribute_name(attr), attr.value] }
+        children = opts[:ignore_children] ? [] : node.children.reject { |child| node_excluded?(child, opts) }
+        [node.class, element_name(node), attributes, children.map { |child| node_fingerprint(child, opts, cache) }]
       else
-        "O:#{node.class}:#{node}"
+        [node.class, node.to_s]
       end
     end
 
@@ -438,8 +447,8 @@ module CompareXML
     #   @return type of equivalence (from equivalence constants)
     #
     def compare_sorted_attribute_sets(n1, n2, a1_set, a2_set, opts, differences, status = EQUIVALENT)
-      a1_set = a1_set.sort_by(&:name)
-      a2_set = a2_set.sort_by(&:name)
+      a1_set = a1_set.sort_by { |attr| attribute_name(attr) }
+      a2_set = a2_set.sort_by { |attr| attribute_name(attr) }
       i = j = 0
 
       while i < a1_set.length || j < a2_set.length
@@ -450,10 +459,10 @@ module CompareXML
         elsif a2_set[j].nil?
           result = compare_attributes(n1, n2, a1_set[i], nil, opts, differences)
           i += 1
-        elsif a1_set[i].name < a2_set[j].name
+        elsif attribute_name(a1_set[i]) < attribute_name(a2_set[j])
           result = compare_attributes(n1, n2, a1_set[i], nil, opts, differences)
           i += 1
-        elsif a1_set[i].name > a2_set[j].name
+        elsif attribute_name(a1_set[i]) > attribute_name(a2_set[j])
           result = compare_attributes(n1, n2, nil, a2_set[j], opts, differences)
           j += 1
         else
@@ -493,6 +502,11 @@ module CompareXML
       status
     end
 
+    def attribute_name(attribute)
+      href = attribute.namespace&.href
+      href ? "{#{href}}#{attribute.name}" : attribute.name
+    end
+
     ##
     # Compares two attributes by name and value.
     #
@@ -506,21 +520,22 @@ module CompareXML
     #
     #   @return type of equivalence (from equivalence constants)
     #
+
     def compare_attributes(n1, n2, a1, a2, opts, differences, status = EQUIVALENT)
       if a1.nil?
         status = MISSING_ATTRIBUTE
-        add_difference(n1, n2, nil, "#{a2.name}=\"#{a2.value}\"", opts, differences)
+        add_difference(n1, n2, nil, "#{attribute_name(a2)}=\"#{a2.value}\"", opts, differences)
       elsif a2.nil?
         status = MISSING_ATTRIBUTE
-        add_difference(n1, n2, "#{a1.name}=\"#{a1.value}\"", nil, opts, differences)
-      elsif a1.name == a2.name
+        add_difference(n1, n2, "#{attribute_name(a1)}=\"#{a1.value}\"", nil, opts, differences)
+      elsif attribute_name(a1) == attribute_name(a2)
         if a1.value != a2.value
           status = UNEQUAL_ATTRIBUTES
-          add_difference(n1, n2, "#{a1.name}=\"#{a1.value}\"", "#{a2.name}=\"#{a2.value}\"", opts, differences)
+          add_difference(n1, n2, "#{attribute_name(a1)}=\"#{a1.value}\"", "#{attribute_name(a2)}=\"#{a2.value}\"", opts, differences)
         end
       else
         status = UNEQUAL_ATTRIBUTES
-        add_difference(n1, n2, "#{a1.name}=\"#{a1.value}\"", "#{a2.name}=\"#{a2.value}\"", opts, differences)
+        add_difference(n1, n2, "#{attribute_name(a1)}=\"#{a1.value}\"", "#{attribute_name(a2)}=\"#{a2.value}\"", opts, differences)
       end
       status
     end
