@@ -31,7 +31,9 @@ And then execute:
 
 Or install it yourself as:
 
-    gem install compare-xml
+```sh
+gem install compare-xml
+```
 
 
 
